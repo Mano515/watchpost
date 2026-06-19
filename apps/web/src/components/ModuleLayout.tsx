@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   title: string;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function ModuleLayout({ title, icon, iconLabel, children }: Props) {
+  const { t } = useT();
   return (
     <div className="module-page">
       <nav aria-label="Breadcrumb">
@@ -16,7 +18,7 @@ export default function ModuleLayout({ title, icon, iconLabel, children }: Props
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          All tools
+          {t.allTools}
         </Link>
       </nav>
 

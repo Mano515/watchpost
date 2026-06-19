@@ -446,3 +446,35 @@ a:hover { text-decoration-thickness: 2px; }
 .home-header { margin-bottom: 2.5rem; }
 .home-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.4rem; }
 .home-sub { color: var(--text-muted); font-size: 1rem; }
+
+/* ── Language switcher ── */
+.lang-switcher {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+.lang-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--text); }
+.lang-btn--active { border-color: var(--accent); color: var(--accent); background: #58a6ff14; }
+.lang-btn:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+/* ── Top bar (language switcher container) ── */
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 500px) {
+  .topbar { justify-content: center; }
+}

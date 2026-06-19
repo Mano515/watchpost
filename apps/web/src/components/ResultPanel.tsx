@@ -1,13 +1,15 @@
 import type { ScoreDetail } from '@watchpost/shared-types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   details: ScoreDetail[];
 }
 
 export default function ResultPanel({ details }: Props) {
-  const passed = details.filter((d) => d.passed).length;
+  const { t } = useT();
+  const passedCount = details.filter((d) => d.passed).length;
   return (
-    <section aria-label={`Check results: ${passed} of ${details.length} passed`}>
+    <section aria-label={t.checkResults(passedCount, details.length)}>
       <ul className="result-list" role="list">
         {details.map((d, i) => (
           <li
@@ -22,7 +24,7 @@ export default function ResultPanel({ details }: Props) {
             </span>
             <div>
               <p className="result-item__label">
-                <span className="sr-only">{d.passed ? 'Passed:' : 'Failed:'} </span>
+                <span className="sr-only">{d.passed ? t.passed : t.failed}: </span>
                 {d.label}
               </p>
               {!d.passed && d.recommendation && (

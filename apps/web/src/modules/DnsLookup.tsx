@@ -1,6 +1,7 @@
 import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import { api } from '../api/client';
+import { useT } from '../i18n/LanguageContext';
 import type { DnsLookupResult } from '@watchpost/shared-types';
 
 function RecordGroup({ label, records }: { label: string; records: string[] }) {
@@ -8,14 +9,13 @@ function RecordGroup({ label, records }: { label: string; records: string[] }) {
   return (
     <div style={{ marginBottom: '1rem' }}>
       <div className="dns-section__title">{label}</div>
-      {records.map((r, i) => (
-        <div key={i} className="dns-record">{r}</div>
-      ))}
+      {records.map((r, i) => <div key={i} className="dns-record">{r}</div>)}
     </div>
   );
 }
 
 export default function DnsLookup() {
+  const { t } = useT();
   const [domain, setDomain] = useState('example.com');
   const [result, setResult] = useState<DnsLookupResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,10 +32,10 @@ export default function DnsLookup() {
   }
 
   return (
-    <ModuleLayout title="DNS / WHOIS Lookup" icon="🌐" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.dns.title} icon="🌐" iconLabel="Security tool">
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
-          <label className="field-label" htmlFor={inputId}>Domain name</label>
+          <label className="field-label" htmlFor={inputId}>{t.domainLabel}</label>
           <div className="input-row">
             <input
               id={inputId}
@@ -43,19 +43,14 @@ export default function DnsLookup() {
               type="text"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              placeholder="example.com"
+              placeholder={t.placeholderDomain}
               aria-describedby={error ? errorId : undefined}
               aria-invalid={!!error}
               required
             />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || !domain}
-              aria-busy={loading}
-            >
+            <button type="submit" className="btn btn-primary" disabled={loading || !domain} aria-busy={loading}>
               {loading && <span className="spinner" aria-hidden="true" />}
-              {loading ? 'Looking up…' : 'Lookup'}
+              {loading ? t.lookingUp : t.analyze}
             </button>
           </div>
         </div>
@@ -63,7 +58,7 @@ export default function DnsLookup() {
 
       {error && (
         <p id={errorId} className="error-msg" role="alert">
-          <span aria-hidden="true">⚠</span> {error}
+          <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>
       )}
 
@@ -72,28 +67,26 @@ export default function DnsLookup() {
           <>
             <hr className="divider" />
             <div className="dns-grid">
-              <section aria-label="DNS records">
-                <h2 className="dns-section__title" style={{ marginBottom: '1rem', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)' }}>
-                  DNS Records
-                </h2>
+              <section aria-label={t.dnsRecords}>
+                <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>{t.dnsRecords}</h2>
                 <RecordGroup label="A" records={result.records.A} />
                 <RecordGroup label="MX" records={result.records.MX} />
                 <RecordGroup label="NS" records={result.records.NS} />
                 <RecordGroup label="TXT" records={result.records.TXT} />
                 {!result.records.A.length && !result.records.MX.length && !result.records.NS.length && !result.records.TXT.length && (
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No records found.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{t.noRecords}</p>
                 )}
               </section>
 
               {result.whois && (
-                <section aria-label="WHOIS registration info">
-                  <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>WHOIS / RDAP</h2>
+                <section aria-label={t.whoisTitle}>
+                  <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>{t.whoisTitle}</h2>
                   <dl>
                     {[
-                      { label: 'Registrar',   value: result.whois.registrar },
-                      { label: 'Domain age',  value: `${Math.floor(result.whois.domainAge / 365)} years` },
-                      { label: 'Registered',  value: result.whois.createdDate.slice(0, 10) },
-                      { label: 'Expires',     value: result.whois.expiresDate.slice(0, 10) },
+                      { label: t.registrar,   value: result.whois.registrar },
+                      { label: t.domainLabel, value: t.domainAge(Math.floor(result.whois.domainAge / 365)) },
+                      { label: t.registered,  value: result.whois.createdDate.slice(0, 10) },
+                      { label: t.expires,     value: result.whois.expiresDate.slice(0, 10) },
                     ].map(({ label, value }) => (
                       <div key={label} className="whois-row">
                         <dt className="whois-row__label">{label}</dt>

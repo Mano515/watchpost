@@ -1,9 +1,11 @@
 import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import { api } from '../api/client';
+import { useT } from '../i18n/LanguageContext';
 import type { BreachCheckResult } from '@watchpost/shared-types';
 
 export default function BreachCheck() {
+  const { t } = useT();
   const [email, setEmail] = useState('test@example.com');
   const [result, setResult] = useState<BreachCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -20,10 +22,10 @@ export default function BreachCheck() {
   }
 
   return (
-    <ModuleLayout title="Email Breach Check" icon="📧" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.breach.title} icon="📧" iconLabel="Security tool">
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
-          <label className="field-label" htmlFor={inputId}>Email address</label>
+          <label className="field-label" htmlFor={inputId}>{t.emailLabel}</label>
           <div className="input-row">
             <input
               id={inputId}
@@ -31,20 +33,15 @@ export default function BreachCheck() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com"
+              placeholder={t.placeholderEmail}
               autoComplete="email"
               aria-describedby={error ? errorId : undefined}
               aria-invalid={!!error}
               required
             />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || !email}
-              aria-busy={loading}
-            >
+            <button type="submit" className="btn btn-primary" disabled={loading || !email} aria-busy={loading}>
               {loading && <span className="spinner" aria-hidden="true" />}
-              {loading ? 'Checking…' : 'Check'}
+              {loading ? t.checking : t.analyze}
             </button>
           </div>
         </div>
@@ -52,7 +49,7 @@ export default function BreachCheck() {
 
       {error && (
         <p id={errorId} className="error-msg" role="alert">
-          <span aria-hidden="true">⚠</span> {error}
+          <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>
       )}
 
@@ -64,7 +61,7 @@ export default function BreachCheck() {
               <>
                 <p className="breach-status breach-status--danger" role="status">
                   <span aria-hidden="true">⚠</span>
-                  Found in {result.breaches.length} breach{result.breaches.length > 1 ? 'es' : ''}
+                  {t.breachStatusDanger(result.breaches.length)}
                 </p>
                 <ul className="breach-list" role="list" aria-label="Breach details">
                   {result.breaches.map((b, i) => (
@@ -80,7 +77,7 @@ export default function BreachCheck() {
               </>
             ) : (
               <p className="breach-status breach-status--safe" role="status">
-                <span aria-hidden="true">✓</span> No breaches found for this email.
+                <span aria-hidden="true">✓</span> {t.breachStatusSafe}
               </p>
             )}
           </>

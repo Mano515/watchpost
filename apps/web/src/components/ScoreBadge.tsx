@@ -1,17 +1,10 @@
 import type { Grade } from '@watchpost/shared-types';
+import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   score: number;
   grade: Grade;
 }
-
-const gradeLabels: Record<Grade, string> = {
-  A: 'Excellent',
-  B: 'Good',
-  C: 'Fair',
-  D: 'Poor',
-  F: 'Critical',
-};
 
 const gradeColors: Record<Grade, string> = {
   A: 'var(--grade-a)',
@@ -22,13 +15,14 @@ const gradeColors: Record<Grade, string> = {
 };
 
 export default function ScoreBadge({ score, grade }: Props) {
+  const { t } = useT();
   const color = gradeColors[grade];
-  const label = gradeLabels[grade];
+  const label = t.grades[grade];
   return (
     <div
       className="score-badge"
       role="status"
-      aria-label={`Security grade: ${grade} — ${label}. Score: ${score} out of 100.`}
+      aria-label={t.securityGrade(grade, label, score)}
     >
       <div
         className="score-circle"
@@ -39,10 +33,8 @@ export default function ScoreBadge({ score, grade }: Props) {
         <span className="score-circle__score">{score}/100</span>
       </div>
       <div aria-hidden="true">
-        <div className="score-meta__grade" style={{ color }}>
-          {label}
-        </div>
-        <div className="score-meta__label">Security grade {grade} · Score {score}/100</div>
+        <div className="score-meta__grade" style={{ color }}>{label}</div>
+        <div className="score-meta__label">{t.gradeLabel(grade, score)}</div>
       </div>
     </div>
   );

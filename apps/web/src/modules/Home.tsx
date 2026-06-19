@@ -1,29 +1,39 @@
 import { Link } from 'react-router-dom';
+import { useT } from '../i18n/LanguageContext';
 
-const MODULES = [
-  { path: '/headers', icon: '🛡️', title: 'Header Scanner',      desc: 'Audit HTTP security headers of any URL.' },
-  { path: '/password', icon: '🔑', title: 'Password Strength',   desc: 'Entropy, crack time, and breach check via k-anonymity.' },
-  { path: '/breach',   icon: '📧', title: 'Email Breach Check',  desc: 'Detect if an email appeared in known data breaches.' },
-  { path: '/ssl',      icon: '🔒', title: 'SSL / TLS Checker',   desc: 'Inspect certificate validity, expiry and strength.' },
-  { path: '/dns',      icon: '🌐', title: 'DNS / WHOIS Lookup',  desc: 'DNS records and domain registration info via RDAP.' },
-];
+const MODULE_KEYS = ['headers', 'password', 'breach', 'ssl', 'dns'] as const;
+const MODULE_PATHS: Record<typeof MODULE_KEYS[number], string> = {
+  headers:  '/headers',
+  password: '/password',
+  breach:   '/breach',
+  ssl:      '/ssl',
+  dns:      '/dns',
+};
+const MODULE_ICONS: Record<typeof MODULE_KEYS[number], string> = {
+  headers:  '🛡️',
+  password: '🔑',
+  breach:   '📧',
+  ssl:      '🔒',
+  dns:      '🌐',
+};
 
 export default function Home() {
+  const { t } = useT();
   return (
     <main id="main" className="page">
       <header className="home-header">
-        <h1 className="home-title">Watchpost</h1>
-        <p className="home-sub">Centralised security audit suite — 5 tools, one interface.</p>
+        <h1 className="home-title">{t.homeTitle}</h1>
+        <p className="home-sub">{t.homeSub}</p>
       </header>
 
-      <nav aria-label="Security tools">
+      <nav aria-label={t.allTools}>
         <ul className="module-grid" role="list">
-          {MODULES.map((m) => (
-            <li key={m.path}>
-              <Link to={m.path} className="module-card">
-                <div className="module-card__icon" aria-hidden="true">{m.icon}</div>
-                <div className="module-card__title">{m.title}</div>
-                <p className="module-card__desc">{m.desc}</p>
+          {MODULE_KEYS.map((key) => (
+            <li key={key}>
+              <Link to={MODULE_PATHS[key]} className="module-card">
+                <div className="module-card__icon" aria-hidden="true">{MODULE_ICONS[key]}</div>
+                <div className="module-card__title">{t.modules[key].title}</div>
+                <p className="module-card__desc">{t.modules[key].desc}</p>
               </Link>
             </li>
           ))}

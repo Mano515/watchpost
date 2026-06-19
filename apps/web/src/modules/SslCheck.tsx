@@ -3,9 +3,11 @@ import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
+import { useT } from '../i18n/LanguageContext';
 import type { SslCheckResult } from '@watchpost/shared-types';
 
 export default function SslCheck() {
+  const { t } = useT();
   const [domain, setDomain] = useState('example.com');
   const [result, setResult] = useState<SslCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,10 +24,10 @@ export default function SslCheck() {
   }
 
   return (
-    <ModuleLayout title="SSL / TLS Checker" icon="🔒" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.ssl.title} icon="🔒" iconLabel="Security tool">
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
-          <label className="field-label" htmlFor={inputId}>Domain name</label>
+          <label className="field-label" htmlFor={inputId}>{t.domainLabel}</label>
           <div className="input-row">
             <input
               id={inputId}
@@ -33,19 +35,14 @@ export default function SslCheck() {
               type="text"
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
-              placeholder="example.com"
+              placeholder={t.placeholderDomain}
               aria-describedby={error ? errorId : undefined}
               aria-invalid={!!error}
               required
             />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || !domain}
-              aria-busy={loading}
-            >
+            <button type="submit" className="btn btn-primary" disabled={loading || !domain} aria-busy={loading}>
               {loading && <span className="spinner" aria-hidden="true" />}
-              {loading ? 'Checking…' : 'Check'}
+              {loading ? t.checking : t.analyze}
             </button>
           </div>
         </div>
@@ -53,7 +50,7 @@ export default function SslCheck() {
 
       {error && (
         <p id={errorId} className="error-msg" role="alert">
-          <span aria-hidden="true">⚠</span> {error}
+          <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>
       )}
 
@@ -62,31 +59,29 @@ export default function SslCheck() {
           <>
             <hr className="divider" />
             <ScoreBadge score={result.score} grade={result.grade} />
-
             <div className="info-grid" style={{ marginBottom: '1.25rem' }}>
               <div className="info-cell">
-                <div className="info-cell__label">Issuer</div>
+                <div className="info-cell__label">{t.issuer}</div>
                 <div className="info-cell__value">{result.issuer}</div>
               </div>
               <div className="info-cell">
-                <div className="info-cell__label">Protocol</div>
+                <div className="info-cell__label">{t.protocol}</div>
                 <div className="info-cell__value">{result.tlsVersion}</div>
               </div>
               <div className="info-cell">
-                <div className="info-cell__label">Expires in</div>
+                <div className="info-cell__label">{t.expires}</div>
                 <div
                   className="info-cell__value"
                   style={{ color: result.daysUntilExpiry <= 30 ? 'var(--err)' : 'inherit' }}
                 >
-                  {result.daysUntilExpiry} days
+                  {t.expiresIn(result.daysUntilExpiry)}
                 </div>
               </div>
               <div className="info-cell">
-                <div className="info-cell__label">Signature</div>
+                <div className="info-cell__label">{t.signature}</div>
                 <div className="info-cell__value">{result.signatureAlgorithm}</div>
               </div>
             </div>
-
             <ResultPanel details={result.details} />
           </>
         )}
