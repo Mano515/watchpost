@@ -82,6 +82,24 @@ export const demoDomain: DomainAuditResult = {
       expiresDate: '2025-08-13T04:00:00Z',
       domainAge: 10748,
     },
+    emailSecurity: {
+      spf:    'v=spf1 include:_spf.google.com ~all',
+      dmarc:  null,
+      caa:    [],
+      dnssec: false,
+      score: {
+        score: 33,
+        grade: 'F',
+        details: [
+          { key: 'email.spf_present',   label: 'SPF record present',                        passed: true  },
+          { key: 'email.spf_strict',    label: 'SPF policy is strict',                      passed: false },
+          { key: 'email.dmarc_present', label: 'DMARC record present',                      passed: false },
+          { key: 'email.dmarc_policy',  label: 'DMARC policy is quarantine or reject',      passed: false },
+          { key: 'email.caa',           label: 'CAA records restrict certificate issuance', passed: false },
+          { key: 'email.dnssec',        label: 'DNSSEC enabled',                            passed: false },
+        ],
+      },
+    },
   },
 };
 

@@ -8,7 +8,7 @@ import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { demoDomain } from '../demo/mockData';
-import type { DomainAuditResult } from '@watchpost/shared-types';
+import type { DomainAuditResult, EmailSecurityResult } from '@watchpost/shared-types';
 
 function RecordGroup({ label, records }: { label: string; records: string[] }) {
   if (!records.length) return null;
@@ -99,7 +99,59 @@ function DomainResult({ result, t }: { result: DomainAuditResult; t: ReturnType<
           )}
         </div>
       </section>
+
+      <hr className="divider" />
+
+      <EmailSecuritySection es={result.dns.emailSecurity} t={t} />
     </>
+  );
+}
+
+function EmailSecuritySection({ es, t }: { es: EmailSecurityResult; t: ReturnType<typeof useT>['t'] }) {
+  return (
+    <section aria-label={t.emailSecTitle} style={{ marginBottom: '1.75rem' }}>
+      <h2 style={{ fontSize: '0.95rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--text-2)' }}>
+        ✉️ {t.emailSecTitle}
+      </h2>
+
+      <ScoreBadge score={es.score.score} grade={es.score.grade} />
+
+      <div className="info-grid" style={{ marginBottom: '1.25rem' }}>
+        <InfoCell label={t.spfLabel}    value={es.spf    ?? '—'} mono />
+        <InfoCell label={t.dmarcLabel}  value={es.dmarc  ?? '—'} mono />
+        <InfoCell
+          label={t.caaLabel}
+          value={es.caa.length ? es.caa.join(', ') : '—'}
+          mono
+        />
+        <InfoCell
+          label={t.dnssecLabel}
+          value={es.dnssec ? '✓' : '✗'}
+          color={es.dnssec ? 'var(--ok)' : 'var(--err)'}
+        />
+      </div>
+
+      <ResultPanel details={es.score.details} />
+    </section>
+  );
+}
+
+function InfoCell({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
+  return (
+    <div className="info-cell">
+      <div className="info-cell__label">{label}</div>
+      <div
+        className="info-cell__value"
+        style={{
+          fontFamily: mono ? 'var(--font-mono)' : undefined,
+          fontSize: mono ? '0.75rem' : undefined,
+          color,
+          wordBreak: 'break-all',
+        }}
+      >
+        {value}
+      </div>
+    </div>
   );
 }
 

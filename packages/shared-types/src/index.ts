@@ -76,6 +76,14 @@ export interface VulnScanResult {
   findings: VulnFinding[];
 }
 
+export interface EmailSecurityResult {
+  spf:    string | null;  // raw SPF record
+  dmarc:  string | null;  // raw DMARC record
+  caa:    string[];
+  dnssec: boolean;
+  score:  SecurityScore;  // pre-computed check details
+}
+
 export interface DnsResult {
   records: {
     A: string[];
@@ -89,4 +97,5 @@ export interface DnsResult {
     expiresDate: string;
     domainAge: number;
   } | null;
+  emailSecurity: EmailSecurityResult;
 }
