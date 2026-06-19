@@ -1,4 +1,4 @@
-import type { HeaderScanResult, PasswordCheckResult, BreachCheckResult, DomainAuditResult } from '@watchpost/shared-types';
+import type { HeaderScanResult, PasswordCheckResult, BreachCheckResult, DomainAuditResult, VulnScanResult } from '@watchpost/shared-types';
 
 export const demoHeaders: HeaderScanResult = {
   url: 'https://example.com',
@@ -83,4 +83,23 @@ export const demoDomain: DomainAuditResult = {
       domainAge: 10748,
     },
   },
+};
+
+export const demoVuln: VulnScanResult = {
+  url: 'https://example.com',
+  score: 42,
+  grade: 'D',
+  findings: [
+    { key: 'vuln.server_disclosure', label: 'Server version not exposed',        severity: 'medium', passed: false, detail: 'Apache/2.4.54 (Ubuntu)' },
+    { key: 'vuln.powered_by',        label: 'X-Powered-By header absent',        severity: 'low',    passed: false, detail: 'PHP/8.1.12' },
+    { key: 'vuln.cors_wildcard',     label: 'CORS not open to all origins',       severity: 'high',   passed: false, detail: 'Access-Control-Allow-Origin: *' },
+    { key: 'vuln.csp_unsafe_inline', label: "CSP blocks 'unsafe-inline'",        severity: 'high',   passed: false },
+    { key: 'vuln.csp_unsafe_eval',   label: "CSP blocks 'unsafe-eval'",          severity: 'high',   passed: true  },
+    { key: 'vuln.csp_wildcard_src',  label: 'CSP has no wildcard source directives', severity: 'medium', passed: true },
+    { key: 'vuln.cookie_secure',     label: 'Cookies have Secure flag',          severity: 'medium', passed: false },
+    { key: 'vuln.cookie_httponly',   label: 'Cookies have HttpOnly flag',        severity: 'medium', passed: true  },
+    { key: 'vuln.cookie_samesite',   label: 'Cookies have SameSite attribute',   severity: 'low',    passed: false },
+    { key: 'vuln.robots_sensitive',  label: 'robots.txt does not expose sensitive paths', severity: 'low', passed: false, detail: '/admin, /backup, /config' },
+    { key: 'vuln.security_txt',      label: 'security.txt present',              severity: 'info',   passed: false },
+  ],
 };

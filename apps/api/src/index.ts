@@ -5,6 +5,7 @@ import { headerRoutes } from './routes/headers';
 import { passwordRoutes } from './routes/password';
 import { breachRoutes } from './routes/breach';
 import { domainRoutes } from './routes/domain';
+import { vulnRoutes } from './routes/vuln';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -27,6 +28,7 @@ app.use('/api/headers', headerRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/breach', breachRoutes);
 app.use('/api/domain', domainRoutes);
+app.use('/api/vuln', vulnRoutes);
 
 app.listen(PORT, () => {
   console.log(`Watchpost API running on http://localhost:${PORT}`);

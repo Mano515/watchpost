@@ -8,6 +8,7 @@ import HeaderScan from './modules/HeaderScan';
 import PasswordCheck from './modules/PasswordCheck';
 import BreachCheck from './modules/BreachCheck';
 import DomainAudit from './modules/DomainAudit';
+import VulnScan from './modules/VulnScan';
 
 export default function App() {
   const { t } = useT();
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/password" element={<PasswordCheck />} />
         <Route path="/breach"   element={<BreachCheck />} />
         <Route path="/domain"   element={<DomainAudit />} />
+        <Route path="/vuln"    element={<VulnScan />} />
       </Routes>
     </>
   );

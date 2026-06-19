@@ -12,6 +12,7 @@ export interface Translations {
     password:{ title: string; desc: string; explainer: string };
     breach:  { title: string; desc: string; explainer: string };
     domain:  { title: string; desc: string; explainer: string };
+    vuln:    { title: string; desc: string; explainer: string };
   };
 
   analyze: string;
@@ -81,7 +82,7 @@ export interface Translations {
   recentScans:   string;
   clearHistory:  string;
   noHistory:     string;
-  historyTypes:  Record<'headers' | 'password' | 'breach' | 'domain', string>;
+  historyTypes:  Record<'headers' | 'password' | 'breach' | 'domain' | 'vuln', string>;
 
   // Export PDF
   exportPdf: string;
@@ -93,6 +94,10 @@ export interface Translations {
   bulkAudit:        string;
   bulkAuditing:     string;
   bulkResults:      (n: number) => string;
+
+  vulnSeverity: Record<'high' | 'medium' | 'low' | 'info', string>;
+  vulnFindings: (n: number) => string;
+  vulnInfoNote: string;
 
   // Check keys → translated label + rec + explanation
   checks: Record<string, {
@@ -130,6 +135,11 @@ const en: Translations = {
       title: 'Domain Audit',
       desc:  'SSL certificate, DNS records and WHOIS info in one shot.',
       explainer: 'Two essential checks for any domain, combined into one: the SSL certificate (is the connection encrypted and trustworthy? does it expire soon?) and the DNS records (where does the domain point? who registered it and when?). Very useful for verifying a suspicious site — a domain created last week, with a hidden owner, imitating a well-known brand is a classic sign of a scam.',
+    },
+    vuln: {
+      title: 'Vulnerability Scan',
+      desc:  'Passive scan for information leaks, CORS issues, CSP weaknesses and more.',
+      explainer: "This tool visits a website like a browser would, then analyses its responses for common security mistakes: does it reveal what software it runs (a gift to attackers)? Are its cookies properly protected? Is its security policy overly permissive? Does it accidentally list sensitive admin pages? None of this is intrusive — it only reads what the site publicly returns.",
     },
   },
 
@@ -203,7 +213,7 @@ const en: Translations = {
   recentScans:  'Recent scans',
   clearHistory: 'Clear',
   noHistory:    'No recent scans.',
-  historyTypes: { headers: 'Headers', password: 'Password', breach: 'Breach', domain: 'Domain' },
+  historyTypes: { headers: 'Headers', password: 'Password', breach: 'Breach', domain: 'Domain', vuln: 'Vuln' },
 
   exportPdf: 'Export PDF',
 
@@ -213,6 +223,10 @@ const en: Translations = {
   bulkAudit:       'Audit all',
   bulkAuditing:    'Auditing…',
   bulkResults:     (n) => `${n} domain${n > 1 ? 's' : ''} audited`,
+
+  vulnSeverity: { high: 'High', medium: 'Medium', low: 'Low', info: 'Info' },
+  vulnFindings: (n) => `${n} finding${n > 1 ? 's' : ''}`,
+  vulnInfoNote: 'Info findings do not affect the score.',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Add a CSP header to restrict which scripts and resources can load.', why: 'Prevents attackers from injecting malicious scripts into your pages (XSS).' },
@@ -232,6 +246,18 @@ const en: Translations = {
     'pwd.special':   { label: 'Contains special characters', rec: 'Add special characters: !@#$%…', why: 'Symbols dramatically expand the number of possible combinations.' },
     'pwd.not_pwned': { label: 'Not found in data breaches', rec: 'This password was found in breaches — change it immediately on all your accounts.', why: 'Attackers try known leaked passwords first. A compromised password is useless regardless of its length.' },
     'pwd.entropy':   { label: 'Entropy ≥ 60 bits', rec: 'Increase length or variety of characters.', why: 'Entropy measures true unpredictability. Below 60 bits, a modern computer can crack it in hours.' },
+    'vuln.server_disclosure': { label: 'Server version not exposed', rec: 'Configure your server to hide its version number.', why: 'Knowing the exact version lets attackers look up known vulnerabilities for that specific version.' },
+    'vuln.powered_by':        { label: 'X-Powered-By header absent', rec: 'Remove the X-Powered-By header in your server config.', why: 'Revealing the technology stack (PHP, Express, ASP.NET) helps attackers target known weaknesses.' },
+    'vuln.aspnet_version':    { label: 'ASP.NET version not disclosed', rec: 'Set enableVersionHeader="false" in Web.config.', why: 'Same principle as X-Powered-By — less information means a harder target.' },
+    'vuln.cors_wildcard':     { label: 'CORS not open to all origins', rec: 'Replace Access-Control-Allow-Origin: * with specific trusted domains.', why: 'A wildcard lets any website read your API responses, enabling data theft via malicious pages.' },
+    'vuln.csp_unsafe_inline': { label: "CSP blocks 'unsafe-inline'", rec: "Replace 'unsafe-inline' with nonces or hashes in your Content-Security-Policy.", why: "unsafe-inline allows injected <script> and <style> tags to run — the primary vector for XSS attacks." },
+    'vuln.csp_unsafe_eval':   { label: "CSP blocks 'unsafe-eval'", rec: "Remove 'unsafe-eval' from your CSP.", why: "unsafe-eval allows eval() and new Function(), which attackers use to execute arbitrary code." },
+    'vuln.csp_wildcard_src':  { label: 'CSP has no wildcard source directives', rec: 'Replace wildcard (*) origins with explicit trusted domains.', why: 'A wildcard in script-src or connect-src means any domain can serve code or receive data.' },
+    'vuln.cookie_secure':     { label: 'Cookies have Secure flag', rec: 'Add the Secure attribute to all cookies.', why: 'Without Secure, cookies can be transmitted over unencrypted HTTP and intercepted.' },
+    'vuln.cookie_httponly':   { label: 'Cookies have HttpOnly flag', rec: 'Add HttpOnly to prevent JavaScript access to cookies.', why: 'If an XSS attack occurs, HttpOnly cookies cannot be stolen by malicious scripts.' },
+    'vuln.cookie_samesite':   { label: 'Cookies have SameSite attribute', rec: 'Set SameSite=Strict or Lax on your cookies.', why: 'Without SameSite, forged cross-site requests (CSRF) can use your cookies without the user knowing.' },
+    'vuln.robots_sensitive':  { label: 'robots.txt does not expose sensitive paths', rec: 'Remove admin or private paths from robots.txt.', why: "robots.txt is public — listing paths like /admin or /backup acts as a map for attackers." },
+    'vuln.security_txt':      { label: 'security.txt present', rec: 'Create /.well-known/security.txt with a contact address for vulnerability reports.', why: 'Allows security researchers to responsibly report issues they find on your site.' },
   },
 };
 
@@ -263,6 +289,11 @@ const fr: Translations = {
       title: 'Audit de domaine',
       desc:  'Certificat SSL, enregistrements DNS et infos WHOIS en un seul endroit.',
       explainer: 'Deux vérifications essentielles regroupées en une : le certificat SSL (la connexion est-elle chiffrée et fiable ? expire-t-elle bientôt ?) et les enregistrements DNS (vers où pointe le domaine ? qui l\'a enregistré et quand ?). Très utile pour vérifier un site suspect : un domaine créé la semaine dernière, avec un propriétaire caché, imitant une grande marque, c\'est un signe classique d\'arnaque.',
+    },
+    vuln: {
+      title: 'Scan de vulnérabilités',
+      desc:  'Analyse passive : fuites d\'infos, CORS, faiblesses de la CSP et plus.',
+      explainer: "Cet outil visite un site web comme le ferait un navigateur, puis analyse ses réponses pour détecter des erreurs de sécurité courantes : est-ce qu'il révèle quel logiciel il utilise (un cadeau pour les pirates) ? Ses cookies sont-ils correctement protégés ? Sa politique de sécurité est-elle trop permissive ? Liste-t-il accidentellement des pages d'administration sensibles ? Rien d'intrusif — l'outil lit uniquement ce que le site renvoie publiquement.",
     },
   },
 
@@ -336,7 +367,7 @@ const fr: Translations = {
   recentScans:  'Recherches récentes',
   clearHistory: 'Effacer',
   noHistory:    'Aucune recherche récente.',
-  historyTypes: { headers: 'En-têtes', password: 'Mot de passe', breach: 'Fuite', domain: 'Domaine' },
+  historyTypes: { headers: 'En-têtes', password: 'Mot de passe', breach: 'Fuite', domain: 'Domaine', vuln: 'Vulnér.' },
 
   exportPdf: 'Exporter PDF',
 
@@ -346,6 +377,10 @@ const fr: Translations = {
   bulkAudit:       'Tout auditer',
   bulkAuditing:    'Audit en cours…',
   bulkResults:     (n) => `${n} domaine${n > 1 ? 's' : ''} audité${n > 1 ? 's' : ''}`,
+
+  vulnSeverity: { high: 'Élevée', medium: 'Moyenne', low: 'Faible', info: 'Info' },
+  vulnFindings: (n) => `${n} résultat${n > 1 ? 's' : ''}`,
+  vulnInfoNote: 'Les éléments « Info » n\'affectent pas le score.',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Ajoutez un en-tête CSP pour restreindre les scripts et ressources autorisés.', why: 'Empêche les attaquants d\'injecter des scripts malveillants dans vos pages (XSS).' },
@@ -365,6 +400,18 @@ const fr: Translations = {
     'pwd.special':   { label: 'Contient des caractères spéciaux', rec: 'Ajoutez des caractères spéciaux : !@#$%…', why: 'Les symboles augmentent considérablement le nombre de combinaisons possibles.' },
     'pwd.not_pwned': { label: 'Absent des fuites de données', rec: 'Ce mot de passe figure dans des fuites — changez-le immédiatement sur tous vos comptes.', why: 'Les attaquants essayent d\'abord les mots de passe déjà compromis. Un mot de passe fuité est inutilisable.' },
     'pwd.entropy':   { label: 'Entropie ≥ 60 bits', rec: 'Augmentez la longueur ou la variété des caractères.', why: 'L\'entropie mesure l\'imprévisibilité réelle. En dessous de 60 bits, un ordinateur moderne peut le craquer en quelques heures.' },
+    'vuln.server_disclosure': { label: 'Version du serveur non exposée', rec: 'Configurez votre serveur pour masquer son numéro de version.', why: 'Connaître la version exacte permet aux attaquants de chercher les failles connues pour cette version précise.' },
+    'vuln.powered_by':        { label: 'En-tête X-Powered-By absent', rec: 'Supprimez l\'en-tête X-Powered-By dans la configuration de votre serveur.', why: 'Révéler la pile technologique (PHP, Express, ASP.NET) aide les attaquants à cibler les faiblesses connues.' },
+    'vuln.aspnet_version':    { label: 'Version ASP.NET non divulguée', rec: 'Ajoutez enableVersionHeader="false" dans Web.config.', why: 'Même principe que X-Powered-By — moins d\'informations = une cible plus difficile.' },
+    'vuln.cors_wildcard':     { label: 'CORS non ouvert à toutes les origines', rec: 'Remplacez Access-Control-Allow-Origin: * par des domaines de confiance spécifiques.', why: 'Un joker permet à n\'importe quel site de lire vos réponses API, permettant le vol de données.' },
+    'vuln.csp_unsafe_inline': { label: "La CSP bloque 'unsafe-inline'", rec: "Remplacez 'unsafe-inline' par des nonces ou des hachages dans votre CSP.", why: "unsafe-inline permet aux balises <script> et <style> injectées de s'exécuter — le principal vecteur des attaques XSS." },
+    'vuln.csp_unsafe_eval':   { label: "La CSP bloque 'unsafe-eval'", rec: "Supprimez 'unsafe-eval' de votre CSP.", why: "unsafe-eval autorise eval() et new Function(), que les attaquants utilisent pour exécuter du code arbitraire." },
+    'vuln.csp_wildcard_src':  { label: 'La CSP n\'a pas de source joker', rec: 'Remplacez les origines joker (*) par des domaines explicites de confiance.', why: 'Un joker dans script-src ou connect-src permet à n\'importe quel domaine de servir du code.' },
+    'vuln.cookie_secure':     { label: 'Les cookies ont le flag Secure', rec: 'Ajoutez l\'attribut Secure à tous vos cookies.', why: 'Sans Secure, les cookies peuvent être transmis en HTTP non chiffré et interceptés.' },
+    'vuln.cookie_httponly':   { label: 'Les cookies ont le flag HttpOnly', rec: 'Ajoutez HttpOnly pour empêcher l\'accès JavaScript aux cookies.', why: 'En cas d\'attaque XSS, les cookies HttpOnly ne peuvent pas être volés par des scripts malveillants.' },
+    'vuln.cookie_samesite':   { label: 'Les cookies ont l\'attribut SameSite', rec: 'Définissez SameSite=Strict ou Lax sur vos cookies.', why: 'Sans SameSite, des requêtes cross-site forgées (CSRF) peuvent utiliser vos cookies à l\'insu de l\'utilisateur.' },
+    'vuln.robots_sensitive':  { label: 'robots.txt ne révèle pas de chemins sensibles', rec: 'Supprimez les chemins admin ou privés de robots.txt.', why: 'Le fichier robots.txt est public — lister des chemins comme /admin ou /backup constitue une carte pour les attaquants.' },
+    'vuln.security_txt':      { label: 'security.txt présent', rec: 'Créez /.well-known/security.txt avec un contact pour les signalements de vulnérabilités.', why: 'Permet aux chercheurs en sécurité de signaler de manière responsable les problèmes trouvés sur votre site.' },
   },
 };
 
@@ -396,6 +443,11 @@ const es: Translations = {
       title: 'Auditoría de dominio',
       desc:  'Certificado SSL, registros DNS e info WHOIS en un solo lugar.',
       explainer: 'Dos verificaciones esenciales combinadas en una: el certificado SSL (¿está la conexión cifrada y es de confianza? ¿caduca pronto?) y los registros DNS (¿a dónde apunta el dominio? ¿quién lo registró y cuándo?). Muy útil para verificar un sitio sospechoso: un dominio creado la semana pasada, con propietario oculto, imitando una marca conocida, es una señal clásica de estafa.',
+    },
+    vuln: {
+      title: 'Escaneo de vulnerabilidades',
+      desc:  'Análisis pasivo: fugas de info, CORS, debilidades de CSP y más.',
+      explainer: 'Esta herramienta visita un sitio web como lo haría un navegador y luego analiza sus respuestas para detectar errores de seguridad comunes: ¿revela qué software usa (un regalo para los atacantes)? ¿Sus cookies están correctamente protegidas? ¿Su política de seguridad es demasiado permisiva? ¿Lista accidentalmente páginas de administración sensibles? Nada invasivo — solo lee lo que el sitio devuelve públicamente.',
     },
   },
 
@@ -469,7 +521,7 @@ const es: Translations = {
   recentScans:  'Búsquedas recientes',
   clearHistory: 'Borrar',
   noHistory:    'No hay búsquedas recientes.',
-  historyTypes: { headers: 'Cabeceras', password: 'Contraseña', breach: 'Filtración', domain: 'Dominio' },
+  historyTypes: { headers: 'Cabeceras', password: 'Contraseña', breach: 'Filtración', domain: 'Dominio', vuln: 'Vuln.' },
 
   exportPdf: 'Exportar PDF',
 
@@ -479,6 +531,10 @@ const es: Translations = {
   bulkAudit:       'Auditar todo',
   bulkAuditing:    'Auditando…',
   bulkResults:     (n) => `${n} dominio${n > 1 ? 's' : ''} auditado${n > 1 ? 's' : ''}`,
+
+  vulnSeverity: { high: 'Alta', medium: 'Media', low: 'Baja', info: 'Info' },
+  vulnFindings: (n) => `${n} hallazgo${n > 1 ? 's' : ''}`,
+  vulnInfoNote: 'Los elementos "Info" no afectan la puntuación.',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Añade una cabecera CSP para restringir los scripts y recursos permitidos.', why: 'Evita que los atacantes inyecten scripts maliciosos en tus páginas (XSS).' },
@@ -498,6 +554,18 @@ const es: Translations = {
     'pwd.special':   { label: 'Contiene caracteres especiales', rec: 'Añade caracteres especiales: !@#$%…', why: 'Los símbolos amplían drásticamente el número de combinaciones posibles.' },
     'pwd.not_pwned': { label: 'Ausente de filtraciones de datos', rec: 'Esta contraseña aparece en filtraciones — cámbiala inmediatamente en todas tus cuentas.', why: 'Los atacantes prueban primero las contraseñas ya comprometidas. Una contraseña filtrada es inútil.' },
     'pwd.entropy':   { label: 'Entropía ≥ 60 bits', rec: 'Aumenta la longitud o variedad de caracteres.', why: 'La entropía mide la imprevisibilidad real. Por debajo de 60 bits, un ordenador moderno puede descifrarla en horas.' },
+    'vuln.server_disclosure': { label: 'Versión del servidor no expuesta', rec: 'Configura tu servidor para ocultar su número de versión.', why: 'Conocer la versión exacta permite a los atacantes buscar vulnerabilidades conocidas para esa versión.' },
+    'vuln.powered_by':        { label: 'Cabecera X-Powered-By ausente', rec: 'Elimina la cabecera X-Powered-By en la configuración de tu servidor.', why: 'Revelar la pila tecnológica (PHP, Express, ASP.NET) ayuda a los atacantes a explotar debilidades conocidas.' },
+    'vuln.aspnet_version':    { label: 'Versión ASP.NET no divulgada', rec: 'Añade enableVersionHeader="false" en Web.config.', why: 'Mismo principio que X-Powered-By — menos información significa un objetivo más difícil.' },
+    'vuln.cors_wildcard':     { label: 'CORS no abierto a todos los orígenes', rec: 'Reemplaza Access-Control-Allow-Origin: * con dominios de confianza específicos.', why: 'Un comodín permite a cualquier sitio leer las respuestas de tu API, posibilitando el robo de datos.' },
+    'vuln.csp_unsafe_inline': { label: "La CSP bloquea 'unsafe-inline'", rec: "Reemplaza 'unsafe-inline' con nonces o hashes en tu CSP.", why: "unsafe-inline permite que etiquetas <script> y <style> inyectadas se ejecuten — el principal vector de ataques XSS." },
+    'vuln.csp_unsafe_eval':   { label: "La CSP bloquea 'unsafe-eval'", rec: "Elimina 'unsafe-eval' de tu CSP.", why: "unsafe-eval permite eval() y new Function(), que los atacantes usan para ejecutar código arbitrario." },
+    'vuln.csp_wildcard_src':  { label: 'La CSP no tiene fuentes comodín', rec: 'Reemplaza los orígenes comodín (*) con dominios de confianza explícitos.', why: 'Un comodín en script-src o connect-src permite que cualquier dominio sirva código o reciba datos.' },
+    'vuln.cookie_secure':     { label: 'Las cookies tienen el flag Secure', rec: 'Añade el atributo Secure a todas tus cookies.', why: 'Sin Secure, las cookies pueden transmitirse por HTTP sin cifrar y ser interceptadas.' },
+    'vuln.cookie_httponly':   { label: 'Las cookies tienen el flag HttpOnly', rec: 'Añade HttpOnly para evitar el acceso JavaScript a las cookies.', why: 'Si ocurre un ataque XSS, las cookies HttpOnly no pueden ser robadas por scripts maliciosos.' },
+    'vuln.cookie_samesite':   { label: 'Las cookies tienen el atributo SameSite', rec: 'Establece SameSite=Strict o Lax en tus cookies.', why: 'Sin SameSite, solicitudes cross-site falsificadas (CSRF) pueden usar tus cookies sin que el usuario lo sepa.' },
+    'vuln.robots_sensitive':  { label: 'robots.txt no revela rutas sensibles', rec: 'Elimina rutas de admin o privadas de robots.txt.', why: 'El archivo robots.txt es público — listar rutas como /admin o /backup actúa como un mapa para los atacantes.' },
+    'vuln.security_txt':      { label: 'security.txt presente', rec: 'Crea /.well-known/security.txt con un contacto para reportes de vulnerabilidades.', why: 'Permite a los investigadores de seguridad reportar responsablemente los problemas que encuentren en tu sitio.' },
   },
 };
 

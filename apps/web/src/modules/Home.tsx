@@ -2,18 +2,20 @@ import { Link } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory, type HistoryEntry } from '../hooks/useHistory';
 
-const MODULE_KEYS = ['headers', 'password', 'breach', 'domain'] as const;
+const MODULE_KEYS = ['headers', 'password', 'breach', 'domain', 'vuln'] as const;
 const MODULE_PATHS: Record<typeof MODULE_KEYS[number], string> = {
   headers:  '/headers',
   password: '/password',
   breach:   '/breach',
   domain:   '/domain',
+  vuln:     '/vuln',
 };
 const MODULE_ICONS: Record<typeof MODULE_KEYS[number], string> = {
   headers:  '🛡️',
   password: '🔑',
   breach:   '📧',
   domain:   '🔍',
+  vuln:     '🔬',
 };
 const GRADE_COLOR: Record<string, string> = {
   A: 'var(--grade-a)', B: 'var(--grade-b)', C: 'var(--grade-c)',

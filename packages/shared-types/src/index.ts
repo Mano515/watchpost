@@ -58,6 +58,24 @@ export interface SslResult extends SecurityScore {
   signatureAlgorithm: string;
 }
 
+export type VulnSeverity = 'high' | 'medium' | 'low' | 'info';
+
+export interface VulnFinding {
+  key: string;
+  label: string;
+  severity: VulnSeverity;
+  passed: boolean;
+  detail?: string;     // what was found (e.g. "Apache/2.4.1")
+  recommendation?: string;
+}
+
+export interface VulnScanResult {
+  url: string;
+  score: number;
+  grade: Grade;
+  findings: VulnFinding[];
+}
+
 export interface DnsResult {
   records: {
     A: string[];
