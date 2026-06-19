@@ -1,0 +1,17 @@
+{
+  "name": "watchpost",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=apps/api\" \"npm run dev --workspace=apps/web\"",
+    "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=apps/api && npm run build --workspace=apps/web",
+    "typecheck": "npm run typecheck --workspace=packages/shared-types && npm run typecheck --workspace=apps/api && npm run typecheck --workspace=apps/web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
