@@ -24,7 +24,7 @@ export default function HeaderScan() {
   }
 
   return (
-    <ModuleLayout title={t.modules.headers.title} icon="🛡️" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.headers.title} icon="🛡️" iconLabel="Security tool" explainer={t.modules.headers.explainer}>
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
           <label className="field-label" htmlFor={inputId}>{t.targetUrl}</label>

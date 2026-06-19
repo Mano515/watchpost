@@ -6,10 +6,11 @@ interface Props {
   title: string;
   icon: string;
   iconLabel: string;
+  explainer: string;
   children: ReactNode;
 }
 
-export default function ModuleLayout({ title, icon, iconLabel, children }: Props) {
+export default function ModuleLayout({ title, icon, iconLabel, explainer, children }: Props) {
   const { t } = useT();
   return (
     <div className="module-page">
@@ -27,6 +28,8 @@ export default function ModuleLayout({ title, icon, iconLabel, children }: Props
         <span className="sr-only">{iconLabel}: </span>
         {title}
       </h1>
+
+      <p className="explainer">{explainer}</p>
 
       <main id="main" className="card">
         {children}

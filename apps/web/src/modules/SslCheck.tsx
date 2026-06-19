@@ -24,7 +24,7 @@ export default function SslCheck() {
   }
 
   return (
-    <ModuleLayout title={t.modules.ssl.title} icon="🔒" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.ssl.title} icon="🔒" iconLabel="Security tool" explainer={t.modules.ssl.explainer}>
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
           <label className="field-label" htmlFor={inputId}>{t.domainLabel}</label>

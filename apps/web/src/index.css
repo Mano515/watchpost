@@ -435,6 +435,18 @@ a:hover { text-decoration-thickness: 2px; }
 }
 .notice__icon { flex-shrink: 0; }
 
+/* ── Tool explainer ── */
+.explainer {
+  padding: 1rem 1.1rem;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-2);
+  margin-bottom: 1.5rem;
+}
+
 /* ── Section divider ── */
 .divider {
   border: none;

@@ -22,7 +22,7 @@ export default function BreachCheck() {
   }
 
   return (
-    <ModuleLayout title={t.modules.breach.title} icon="📧" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.breach.title} icon="📧" iconLabel="Security tool" explainer={t.modules.breach.explainer}>
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
           <label className="field-label" htmlFor={inputId}>{t.emailLabel}</label>

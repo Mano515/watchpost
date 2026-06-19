@@ -24,7 +24,7 @@ export default function PasswordCheck() {
   }
 
   return (
-    <ModuleLayout title={t.modules.password.title} icon="🔑" iconLabel="Security tool">
+    <ModuleLayout title={t.modules.password.title} icon="🔑" iconLabel="Security tool" explainer={t.modules.password.explainer}>
       <div className="notice">
         <span className="notice__icon" aria-hidden="true">🔒</span>
         <span>{t.passwordNotice}</span>
