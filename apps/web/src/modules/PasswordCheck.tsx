@@ -72,7 +72,7 @@ export default function PasswordCheck() {
               </div>
               <div className="info-cell">
                 <div className="info-cell__label">{t.crackTime}</div>
-                <div className="info-cell__value">{result.crackTimeEstimate}</div>
+                <div className="info-cell__value">{t.formatCrackTime(result.crackTimeSeconds)}</div>
               </div>
               <div className="info-cell">
                 <div className="info-cell__label">{t.knownBreaches}</div>

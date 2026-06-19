@@ -1,20 +1,18 @@
 import { Link } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 
-const MODULE_KEYS = ['headers', 'password', 'breach', 'ssl', 'dns'] as const;
+const MODULE_KEYS = ['headers', 'password', 'breach', 'domain'] as const;
 const MODULE_PATHS: Record<typeof MODULE_KEYS[number], string> = {
   headers:  '/headers',
   password: '/password',
   breach:   '/breach',
-  ssl:      '/ssl',
-  dns:      '/dns',
+  domain:   '/domain',
 };
 const MODULE_ICONS: Record<typeof MODULE_KEYS[number], string> = {
   headers:  '🛡️',
   password: '🔑',
   breach:   '📧',
-  ssl:      '🔒',
-  dns:      '🌐',
+  domain:   '🔍',
 };
 
 export default function Home() {

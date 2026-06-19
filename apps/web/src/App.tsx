@@ -5,8 +5,7 @@ import Home from './modules/Home';
 import HeaderScan from './modules/HeaderScan';
 import PasswordCheck from './modules/PasswordCheck';
 import BreachCheck from './modules/BreachCheck';
-import SslCheck from './modules/SslCheck';
-import DnsLookup from './modules/DnsLookup';
+import DomainAudit from './modules/DomainAudit';
 
 export default function App() {
   const { t } = useT();
@@ -21,8 +20,7 @@ export default function App() {
         <Route path="/headers"  element={<HeaderScan />} />
         <Route path="/password" element={<PasswordCheck />} />
         <Route path="/breach"   element={<BreachCheck />} />
-        <Route path="/ssl"      element={<SslCheck />} />
-        <Route path="/dns"      element={<DnsLookup />} />
+        <Route path="/domain"   element={<DomainAudit />} />
       </Routes>
     </>
   );

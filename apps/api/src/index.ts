@@ -3,8 +3,7 @@ import cors from 'cors';
 import { headerRoutes } from './routes/headers';
 import { passwordRoutes } from './routes/password';
 import { breachRoutes } from './routes/breach';
-import { sslRoutes } from './routes/ssl';
-import { dnsRoutes } from './routes/dns';
+import { domainRoutes } from './routes/domain';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,8 +16,7 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/headers', headerRoutes);
 app.use('/api/password', passwordRoutes);
 app.use('/api/breach', breachRoutes);
-app.use('/api/ssl', sslRoutes);
-app.use('/api/dns', dnsRoutes);
+app.use('/api/domain', domainRoutes);
 
 app.listen(PORT, () => {
   console.log(`Watchpost API running on http://localhost:${PORT}`);

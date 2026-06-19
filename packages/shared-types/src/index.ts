@@ -20,7 +20,6 @@ export function scoreToGrade(score: number): Grade {
   return 'F';
 }
 
-// Module-specific result types
 export interface HeaderScanResult extends SecurityScore {
   url: string;
   headers: Record<string, string | null>;
@@ -28,7 +27,7 @@ export interface HeaderScanResult extends SecurityScore {
 
 export interface PasswordCheckResult extends SecurityScore {
   entropy: number;
-  crackTimeEstimate: string;
+  crackTimeSeconds: number; // raw value — frontend formats it
   pwnedCount: number;
 }
 
@@ -40,12 +39,16 @@ export interface BreachCheckResult {
 
 export interface BreachEntry {
   name: string;
-  date: string;
-  dataTypes: string[];
 }
 
-export interface SslCheckResult extends SecurityScore {
+export interface DomainAuditResult {
   domain: string;
+  ssl: SslResult | null;
+  sslError: string | null;
+  dns: DnsResult;
+}
+
+export interface SslResult extends SecurityScore {
   issuer: string;
   validFrom: string;
   validTo: string;
@@ -54,8 +57,7 @@ export interface SslCheckResult extends SecurityScore {
   signatureAlgorithm: string;
 }
 
-export interface DnsLookupResult {
-  domain: string;
+export interface DnsResult {
   records: {
     A: string[];
     MX: string[];
@@ -66,7 +68,6 @@ export interface DnsLookupResult {
     registrar: string;
     createdDate: string;
     expiresDate: string;
-    domainAge: number; // days
-    nameservers: string[];
+    domainAge: number;
   } | null;
 }

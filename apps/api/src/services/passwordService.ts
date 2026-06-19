@@ -12,14 +12,9 @@ function calcEntropy(password: string): number {
   return Math.log2(Math.pow(charset, password.length));
 }
 
-function entropyToCrackTime(entropy: number): string {
+function entropyToSeconds(entropy: number): number {
   const guessesPerSecond = 1e10;
-  const seconds = Math.pow(2, entropy) / guessesPerSecond;
-  if (seconds < 60) return 'less than a minute';
-  if (seconds < 3600) return `${Math.round(seconds / 60)} minutes`;
-  if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
-  if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
-  return `${Math.round(seconds / 31536000)} years`;
+  return Math.pow(2, entropy) / guessesPerSecond;
 }
 
 async function checkHIBP(password: string): Promise<number> {
@@ -36,7 +31,7 @@ async function checkHIBP(password: string): Promise<number> {
 
 export async function checkPassword(password: string): Promise<PasswordCheckResult> {
   const entropy = calcEntropy(password);
-  const crackTimeEstimate = entropyToCrackTime(entropy);
+  const crackTimeSeconds = entropyToSeconds(entropy);
   const pwnedCount = await checkHIBP(password);
 
   const details: ScoreDetail[] = [
@@ -72,5 +67,5 @@ export async function checkPassword(password: string): Promise<PasswordCheckResu
     },
   ];
 
-  return { entropy, crackTimeEstimate, pwnedCount, ...buildScore(details) };
+  return { entropy, crackTimeSeconds, pwnedCount, ...buildScore(details) };
 }
