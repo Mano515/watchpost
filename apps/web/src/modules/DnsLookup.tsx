@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import { api } from '../api/client';
 import type { DnsLookupResult } from '@watchpost/shared-types';
@@ -7,9 +7,9 @@ function RecordGroup({ label, records }: { label: string; records: string[] }) {
   if (!records.length) return null;
   return (
     <div style={{ marginBottom: '1rem' }}>
-      <div style={{ fontWeight: 600, marginBottom: '0.3rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{label}</div>
+      <div className="dns-section__title">{label}</div>
       {records.map((r, i) => (
-        <div key={i} style={{ fontFamily: 'monospace', fontSize: '0.85rem', background: 'var(--bg)', padding: '0.3rem 0.6rem', borderRadius: 4, marginBottom: 2 }}>{r}</div>
+        <div key={i} className="dns-record">{r}</div>
       ))}
     </div>
   );
@@ -20,43 +20,93 @@ export default function DnsLookup() {
   const [result, setResult] = useState<DnsLookupResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputId = useId();
+  const errorId = useId();
 
-  async function run() {
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true); setError(null); setResult(null);
     try { setResult(await api.dnsLookup(domain)); }
-    catch (e) { setError((e as Error).message); }
+    catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
   }
 
   return (
-    <ModuleLayout title="DNS / WHOIS Lookup" icon="🌐">
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="example.com" />
-        <button onClick={run} disabled={loading || !domain}>{loading ? 'Looking up…' : 'Lookup'}</button>
-      </div>
-      {error && <p style={{ color: 'var(--grade-f)' }}>{error}</p>}
-      {result && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-          <div>
-            <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>DNS Records</h3>
-            <RecordGroup label="A" records={result.records.A} />
-            <RecordGroup label="MX" records={result.records.MX} />
-            <RecordGroup label="NS" records={result.records.NS} />
-            <RecordGroup label="TXT" records={result.records.TXT} />
+    <ModuleLayout title="DNS / WHOIS Lookup" icon="🌐" iconLabel="Security tool">
+      <form onSubmit={run} noValidate>
+        <div className="field" style={{ marginBottom: '1.25rem' }}>
+          <label className="field-label" htmlFor={inputId}>Domain name</label>
+          <div className="input-row">
+            <input
+              id={inputId}
+              className="input"
+              type="text"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              placeholder="example.com"
+              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!error}
+              required
+            />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || !domain}
+              aria-busy={loading}
+            >
+              {loading && <span className="spinner" aria-hidden="true" />}
+              {loading ? 'Looking up…' : 'Lookup'}
+            </button>
           </div>
-          {result.whois && (
-            <div>
-              <h3 style={{ fontWeight: 600, marginBottom: '1rem' }}>WHOIS / RDAP</h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.88rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Registrar <strong style={{ color: 'var(--text)' }}>{result.whois.registrar}</strong></span>
-                <span style={{ color: 'var(--text-muted)' }}>Domain age <strong style={{ color: 'var(--text)' }}>{Math.floor(result.whois.domainAge / 365)} years</strong></span>
-                <span style={{ color: 'var(--text-muted)' }}>Created <strong style={{ color: 'var(--text)' }}>{result.whois.createdDate.slice(0, 10)}</strong></span>
-                <span style={{ color: 'var(--text-muted)' }}>Expires <strong style={{ color: 'var(--text)' }}>{result.whois.expiresDate.slice(0, 10)}</strong></span>
-              </div>
-            </div>
-          )}
         </div>
+      </form>
+
+      {error && (
+        <p id={errorId} className="error-msg" role="alert">
+          <span aria-hidden="true">⚠</span> {error}
+        </p>
       )}
+
+      <div aria-live="polite" aria-atomic="true">
+        {result && (
+          <>
+            <hr className="divider" />
+            <div className="dns-grid">
+              <section aria-label="DNS records">
+                <h2 className="dns-section__title" style={{ marginBottom: '1rem', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)' }}>
+                  DNS Records
+                </h2>
+                <RecordGroup label="A" records={result.records.A} />
+                <RecordGroup label="MX" records={result.records.MX} />
+                <RecordGroup label="NS" records={result.records.NS} />
+                <RecordGroup label="TXT" records={result.records.TXT} />
+                {!result.records.A.length && !result.records.MX.length && !result.records.NS.length && !result.records.TXT.length && (
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No records found.</p>
+                )}
+              </section>
+
+              {result.whois && (
+                <section aria-label="WHOIS registration info">
+                  <h2 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem' }}>WHOIS / RDAP</h2>
+                  <dl>
+                    {[
+                      { label: 'Registrar',   value: result.whois.registrar },
+                      { label: 'Domain age',  value: `${Math.floor(result.whois.domainAge / 365)} years` },
+                      { label: 'Registered',  value: result.whois.createdDate.slice(0, 10) },
+                      { label: 'Expires',     value: result.whois.expiresDate.slice(0, 10) },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="whois-row">
+                        <dt className="whois-row__label">{label}</dt>
+                        <dd className="whois-row__value">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </ModuleLayout>
   );
 }

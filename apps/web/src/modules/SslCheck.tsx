@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
@@ -10,33 +10,87 @@ export default function SslCheck() {
   const [result, setResult] = useState<SslCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputId = useId();
+  const errorId = useId();
 
-  async function run() {
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true); setError(null); setResult(null);
     try { setResult(await api.checkSsl(domain)); }
-    catch (e) { setError((e as Error).message); }
+    catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
   }
 
   return (
-    <ModuleLayout title="SSL/TLS Checker" icon="🔒">
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="example.com" />
-        <button onClick={run} disabled={loading || !domain}>{loading ? 'Checking…' : 'Check'}</button>
-      </div>
-      {error && <p style={{ color: 'var(--grade-f)' }}>{error}</p>}
-      {result && (
-        <>
-          <ScoreBadge score={result.score} grade={result.grade} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-            <span>Issuer: <strong style={{ color: 'var(--text)' }}>{result.issuer}</strong></span>
-            <span>TLS: <strong style={{ color: 'var(--text)' }}>{result.tlsVersion}</strong></span>
-            <span>Expires: <strong style={{ color: result.daysUntilExpiry <= 30 ? 'var(--grade-f)' : 'var(--text)' }}>{result.daysUntilExpiry}d</strong></span>
-            <span>Algorithm: <strong style={{ color: 'var(--text)' }}>{result.signatureAlgorithm}</strong></span>
+    <ModuleLayout title="SSL / TLS Checker" icon="🔒" iconLabel="Security tool">
+      <form onSubmit={run} noValidate>
+        <div className="field" style={{ marginBottom: '1.25rem' }}>
+          <label className="field-label" htmlFor={inputId}>Domain name</label>
+          <div className="input-row">
+            <input
+              id={inputId}
+              className="input"
+              type="text"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              placeholder="example.com"
+              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!error}
+              required
+            />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || !domain}
+              aria-busy={loading}
+            >
+              {loading && <span className="spinner" aria-hidden="true" />}
+              {loading ? 'Checking…' : 'Check'}
+            </button>
           </div>
-          <ResultPanel details={result.details} />
-        </>
+        </div>
+      </form>
+
+      {error && (
+        <p id={errorId} className="error-msg" role="alert">
+          <span aria-hidden="true">⚠</span> {error}
+        </p>
       )}
+
+      <div aria-live="polite" aria-atomic="true">
+        {result && (
+          <>
+            <hr className="divider" />
+            <ScoreBadge score={result.score} grade={result.grade} />
+
+            <div className="info-grid" style={{ marginBottom: '1.25rem' }}>
+              <div className="info-cell">
+                <div className="info-cell__label">Issuer</div>
+                <div className="info-cell__value">{result.issuer}</div>
+              </div>
+              <div className="info-cell">
+                <div className="info-cell__label">Protocol</div>
+                <div className="info-cell__value">{result.tlsVersion}</div>
+              </div>
+              <div className="info-cell">
+                <div className="info-cell__label">Expires in</div>
+                <div
+                  className="info-cell__value"
+                  style={{ color: result.daysUntilExpiry <= 30 ? 'var(--err)' : 'inherit' }}
+                >
+                  {result.daysUntilExpiry} days
+                </div>
+              </div>
+              <div className="info-cell">
+                <div className="info-cell__label">Signature</div>
+                <div className="info-cell__value">{result.signatureAlgorithm}</div>
+              </div>
+            </div>
+
+            <ResultPanel details={result.details} />
+          </>
+        )}
+      </div>
     </ModuleLayout>
   );
 }

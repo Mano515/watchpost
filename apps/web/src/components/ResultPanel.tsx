@@ -5,31 +5,33 @@ interface Props {
 }
 
 export default function ResultPanel({ details }: Props) {
+  const passed = details.filter((d) => d.passed).length;
   return (
-    <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-      {details.map((d, i) => (
-        <li
-          key={i}
-          style={{
-            display: 'flex',
-            gap: '0.75rem',
-            padding: '0.75rem 1rem',
-            background: 'var(--bg)',
-            borderRadius: 'var(--radius)',
-            border: `1px solid ${d.passed ? 'var(--grade-a)' : 'var(--grade-f)'}22`,
-          }}
-        >
-          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{d.passed ? '✓' : '✗'}</span>
-          <div>
-            <div style={{ fontWeight: 500 }}>{d.label}</div>
-            {!d.passed && d.recommendation && (
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.2rem' }}>
-                {d.recommendation}
-              </div>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
+    <section aria-label={`Check results: ${passed} of ${details.length} passed`}>
+      <ul className="result-list" role="list">
+        {details.map((d, i) => (
+          <li
+            key={i}
+            className={`result-item ${d.passed ? 'result-item--pass' : 'result-item--fail'}`}
+          >
+            <span
+              className={`result-item__icon ${d.passed ? 'result-item__icon--pass' : 'result-item__icon--fail'}`}
+              aria-hidden="true"
+            >
+              {d.passed ? '✓' : '✗'}
+            </span>
+            <div>
+              <p className="result-item__label">
+                <span className="sr-only">{d.passed ? 'Passed:' : 'Failed:'} </span>
+                {d.label}
+              </p>
+              {!d.passed && d.recommendation && (
+                <p className="result-item__rec">{d.recommendation}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
@@ -10,27 +10,62 @@ export default function HeaderScan() {
   const [result, setResult] = useState<HeaderScanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const inputId = useId();
+  const errorId = useId();
 
-  async function run() {
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
     setLoading(true); setError(null); setResult(null);
     try { setResult(await api.scanHeaders(url)); }
-    catch (e) { setError((e as Error).message); }
+    catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
   }
 
   return (
-    <ModuleLayout title="HTTP Header Scanner" icon="🛡️">
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://example.com" />
-        <button onClick={run} disabled={loading || !url}>{loading ? 'Scanning…' : 'Scan'}</button>
-      </div>
-      {error && <p style={{ color: 'var(--grade-f)' }}>{error}</p>}
-      {result && (
-        <>
-          <ScoreBadge score={result.score} grade={result.grade} />
-          <ResultPanel details={result.details} />
-        </>
+    <ModuleLayout title="HTTP Header Scanner" icon="🛡️" iconLabel="Security tool">
+      <form onSubmit={run} noValidate>
+        <div className="field" style={{ marginBottom: '1.25rem' }}>
+          <label className="field-label" htmlFor={inputId}>Target URL</label>
+          <div className="input-row">
+            <input
+              id={inputId}
+              className="input"
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://example.com"
+              aria-describedby={error ? errorId : undefined}
+              aria-invalid={!!error}
+              required
+            />
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={loading || !url}
+              aria-busy={loading}
+            >
+              {loading && <span className="spinner" aria-hidden="true" />}
+              {loading ? 'Scanning…' : 'Scan'}
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {error && (
+        <p id={errorId} className="error-msg" role="alert">
+          <span aria-hidden="true">⚠</span> {error}
+        </p>
       )}
+
+      <div aria-live="polite" aria-atomic="true">
+        {result && (
+          <>
+            <hr className="divider" />
+            <ScoreBadge score={result.score} grade={result.grade} />
+            <ResultPanel details={result.details} />
+          </>
+        )}
+      </div>
     </ModuleLayout>
   );
 }

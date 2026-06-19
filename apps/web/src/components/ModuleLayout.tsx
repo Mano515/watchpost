@@ -4,31 +4,31 @@ import type { ReactNode } from 'react';
 interface Props {
   title: string;
   icon: string;
+  iconLabel: string;
   children: ReactNode;
 }
 
-export default function ModuleLayout({ title, icon, children }: Props) {
+export default function ModuleLayout({ title, icon, iconLabel, children }: Props) {
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1rem' }}>
-      <Link
-        to="/"
-        style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginBottom: '1.5rem' }}
-      >
-        ← Back
-      </Link>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-        {icon} {title}
+    <div className="module-page">
+      <nav aria-label="Breadcrumb">
+        <Link to="/" className="back-link">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          All tools
+        </Link>
+      </nav>
+
+      <h1 className="module-heading">
+        <span aria-hidden="true" className="module-heading__icon">{icon}</span>
+        <span className="sr-only">{iconLabel}: </span>
+        {title}
       </h1>
-      <div
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius)',
-          padding: '1.5rem',
-        }}
-      >
+
+      <main id="main" className="card">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

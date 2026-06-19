@@ -5,7 +5,15 @@ interface Props {
   grade: Grade;
 }
 
-const gradeColor: Record<Grade, string> = {
+const gradeLabels: Record<Grade, string> = {
+  A: 'Excellent',
+  B: 'Good',
+  C: 'Fair',
+  D: 'Poor',
+  F: 'Critical',
+};
+
+const gradeColors: Record<Grade, string> = {
   A: 'var(--grade-a)',
   B: 'var(--grade-b)',
   C: 'var(--grade-c)',
@@ -14,29 +22,27 @@ const gradeColor: Record<Grade, string> = {
 };
 
 export default function ScoreBadge({ score, grade }: Props) {
-  const color = gradeColor[grade];
+  const color = gradeColors[grade];
+  const label = gradeLabels[grade];
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0' }}>
+    <div
+      className="score-badge"
+      role="status"
+      aria-label={`Security grade: ${grade} — ${label}. Score: ${score} out of 100.`}
+    >
       <div
-        style={{
-          width: 72,
-          height: 72,
-          borderRadius: '50%',
-          border: `4px solid ${color}`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color,
-          fontWeight: 700,
-        }}
+        className="score-circle"
+        style={{ '--grade-color': color } as React.CSSProperties}
+        aria-hidden="true"
       >
-        <span style={{ fontSize: '1.8rem', lineHeight: 1 }}>{grade}</span>
-        <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>{score}/100</span>
+        <span className="score-circle__grade">{grade}</span>
+        <span className="score-circle__score">{score}/100</span>
       </div>
-      <div>
-        <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>Security Grade: {grade}</div>
-        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Score: {score} / 100</div>
+      <div aria-hidden="true">
+        <div className="score-meta__grade" style={{ color }}>
+          {label}
+        </div>
+        <div className="score-meta__label">Security grade {grade} · Score {score}/100</div>
       </div>
     </div>
   );
