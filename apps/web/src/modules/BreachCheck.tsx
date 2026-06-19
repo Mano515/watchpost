@@ -2,23 +2,34 @@ import { useState, useId } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
+import { useHistory } from '../hooks/useHistory';
+import { demoBreach } from '../demo/mockData';
 import type { BreachCheckResult } from '@watchpost/shared-types';
 
 export default function BreachCheck() {
   const { t } = useT();
+  const { push } = useHistory();
   const [email, setEmail] = useState('test@example.com');
   const [result, setResult] = useState<BreachCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const inputId = useId();
   const errorId = useId();
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError(null); setResult(null);
-    try { setResult(await api.checkBreach(email)); }
-    catch (err) { setError((err as Error).message); }
+    setLoading(true); setError(null); setResult(null); setIsDemo(false);
+    try {
+      const r = await api.checkBreach(email);
+      setResult(r);
+      push({ type: 'breach', input: email });
+    } catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
+  }
+
+  function loadDemo() {
+    setResult(demoBreach); setIsDemo(true); setError(null);
   }
 
   return (
@@ -45,6 +56,9 @@ export default function BreachCheck() {
             </button>
           </div>
         </div>
+        <button type="button" className="export-btn" style={{ marginBottom: '0.5rem' }} onClick={loadDemo}>
+          {t.tryDemo}
+        </button>
       </form>
 
       {error && (
@@ -57,6 +71,14 @@ export default function BreachCheck() {
         {result && (
           <>
             <hr className="divider" />
+            {isDemo && (
+              <p className="demo-banner" role="status">
+                <span aria-hidden="true">⚠</span> {t.demoLabel}
+              </p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+              <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
+            </div>
             {result.breached ? (
               <>
                 <p className="breach-status breach-status--danger" role="status">
@@ -64,13 +86,9 @@ export default function BreachCheck() {
                   {t.breachStatusDanger(result.breaches.length)}
                 </p>
                 <ul className="breach-list" role="list" aria-label="Breach details">
-                  {result.breaches.map((b, i) => (
-                    <li key={i} className="breach-item">
+                  {result.breaches.map((b: { name: string }, i: number) => (
+                    <li key={i} className="breach-item animate-in" style={{ animationDelay: `${i * 50}ms` }}>
                       <div className="breach-item__name">{b.name}</div>
-                      <div className="breach-item__meta">
-                        <time dateTime={b.date}>{b.date}</time>
-                        {b.dataTypes.length > 0 && <> · {b.dataTypes.join(', ')}</>}
-                      </div>
                     </li>
                   ))}
                 </ul>

@@ -1,14 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { auditDomain } from '../services/domainService';
+import { validateDomain } from '../middleware/validate';
 
 export const domainRoutes = Router();
 
-domainRoutes.post('/', async (req: Request, res: Response) => {
-  const { domain } = req.body as { domain?: string };
-  if (!domain) return res.status(400).json({ error: 'domain is required' });
+domainRoutes.post('/', validateDomain, async (req: Request, res: Response) => {
   try {
-    const result = await auditDomain(domain);
-    res.json(result);
+    res.json(await auditDomain(req.body.domain as string));
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }

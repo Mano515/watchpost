@@ -1,15 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { scanHeaders } from '../services/headerService';
+import { validateUrl } from '../middleware/validate';
 
 export const headerRoutes = Router();
 
-headerRoutes.post('/', async (req: Request, res: Response) => {
-  const { url } = req.body as { url?: string };
-  if (!url) return res.status(400).json({ error: 'url is required' });
+headerRoutes.post('/', validateUrl, async (req: Request, res: Response) => {
   try {
-    const result = await scanHeaders(url);
-    res.json(result);
+    res.json(await scanHeaders(req.body.url as string));
   } catch (err) {
-    res.status(502).json({ error: `Failed to reach ${url}: ${(err as Error).message}` });
+    res.status(502).json({ error: (err as Error).message });
   }
 });

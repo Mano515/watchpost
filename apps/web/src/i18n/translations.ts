@@ -67,6 +67,38 @@ export interface Translations {
   noRecords:   string;
 
   errorPrefix: string;
+
+  // Theme
+  toggleLight: string;
+  toggleDark:  string;
+
+  // Demo
+  tryDemo:   string;
+  demoLabel: string;
+
+  // History
+  recentScans:   string;
+  clearHistory:  string;
+  noHistory:     string;
+  historyTypes:  Record<'headers' | 'password' | 'breach' | 'domain', string>;
+
+  // Export PDF
+  exportPdf: string;
+
+  // Bulk scan
+  bulkMode:         string;
+  singleMode:       string;
+  bulkPlaceholder:  string;
+  bulkAudit:        string;
+  bulkAuditing:     string;
+  bulkResults:      (n: number) => string;
+
+  // Check keys → translated label + rec + explanation
+  checks: Record<string, {
+    label: string;
+    rec?: string;
+    why?: string; // one-sentence explanation shown as tooltip
+  }>;
 }
 
 // ── English ────────────────────────────────────────────────────────────────
@@ -159,6 +191,46 @@ const en: Translations = {
   noRecords:  'No records found.',
 
   errorPrefix: '⚠',
+
+  toggleLight: 'Light mode',
+  toggleDark:  'Dark mode',
+
+  tryDemo:   'Try an example',
+  demoLabel: 'Demo — simulated data',
+
+  recentScans:  'Recent scans',
+  clearHistory: 'Clear',
+  noHistory:    'No recent scans.',
+  historyTypes: { headers: 'Headers', password: 'Password', breach: 'Breach', domain: 'Domain' },
+
+  exportPdf: 'Export PDF',
+
+  bulkMode:        'Multiple domains',
+  singleMode:      'Single domain',
+  bulkPlaceholder: 'Enter one domain per line\nexample.com\ngoogle.com',
+  bulkAudit:       'Audit all',
+  bulkAuditing:    'Auditing…',
+  bulkResults:     (n) => `${n} domain${n > 1 ? 's' : ''} audited`,
+
+  checks: {
+    'header.csp':  { label: 'Content-Security-Policy', rec: 'Add a CSP header to restrict which scripts and resources can load.', why: 'Prevents attackers from injecting malicious scripts into your pages (XSS).' },
+    'header.hsts': { label: 'Strict-Transport-Security', rec: 'Add HSTS to force browsers to use HTTPS.', why: 'Ensures browsers never connect over unencrypted HTTP, even if a user types "http://".' },
+    'header.xfo':  { label: 'X-Frame-Options', rec: 'Add X-Frame-Options: DENY to prevent your page from being embedded in iframes.', why: 'Stops clickjacking attacks where attackers embed your site invisibly inside their own.' },
+    'header.xcto': { label: 'X-Content-Type-Options', rec: 'Add X-Content-Type-Options: nosniff.', why: 'Prevents browsers from guessing the file type, which attackers exploit to run malicious code.' },
+    'header.rp':   { label: 'Referrer-Policy', rec: 'Add Referrer-Policy: strict-origin-when-cross-origin.', why: 'Controls how much URL information is shared when users click links, protecting user privacy.' },
+    'header.pp':   { label: 'Permissions-Policy', rec: 'Add a Permissions-Policy header to restrict access to camera, microphone, etc.', why: 'Limits which browser features (camera, location, microphone) the page can access.' },
+    'header.https_redirect': { label: 'HTTP → HTTPS redirect', rec: 'Configure your server to redirect all HTTP traffic to HTTPS.', why: 'Without this, users who type your URL without "https" may browse unencrypted.' },
+    'ssl.valid':  { label: 'Certificate is valid', rec: 'Renew your SSL certificate — it is expired or not yet active.', why: 'An invalid certificate means browsers will show a scary warning to your visitors.' },
+    'ssl.expiry': { label: 'Certificate expires in more than 30 days', rec: 'Renew your certificate before it expires.', why: 'Once expired, your site shows a security warning and visitors will leave.' },
+    'ssl.tls':    { label: 'TLS 1.2 or higher', rec: 'Configure your server to use TLS 1.2 or TLS 1.3.', why: 'Older versions (SSL 3.0, TLS 1.0) have known vulnerabilities that attackers can exploit.' },
+    'ssl.sig':    { label: 'Strong signature algorithm', rec: 'Use SHA-256 or stronger. Avoid SHA-1 and MD5.', why: 'Weak algorithms can be forged, allowing attackers to impersonate your site.' },
+    'pwd.length':    { label: 'Length ≥ 12 characters', rec: 'Use at least 12 characters.', why: 'Every extra character multiplies the time needed to brute-force your password.' },
+    'pwd.uppercase': { label: 'Contains uppercase letters', rec: 'Mix uppercase and lowercase letters.', why: 'Expands the character set, making your password harder to guess.' },
+    'pwd.numbers':   { label: 'Contains numbers', rec: 'Add numbers to your password.', why: 'Digits add unpredictability that makes dictionary attacks harder.' },
+    'pwd.special':   { label: 'Contains special characters', rec: 'Add special characters: !@#$%…', why: 'Symbols dramatically expand the number of possible combinations.' },
+    'pwd.not_pwned': { label: 'Not found in data breaches', rec: 'This password was found in breaches — change it immediately on all your accounts.', why: 'Attackers try known leaked passwords first. A compromised password is useless regardless of its length.' },
+    'pwd.entropy':   { label: 'Entropy ≥ 60 bits', rec: 'Increase length or variety of characters.', why: 'Entropy measures true unpredictability. Below 60 bits, a modern computer can crack it in hours.' },
+  },
 };
 
 // ── French ─────────────────────────────────────────────────────────────────
@@ -251,6 +323,46 @@ const fr: Translations = {
   noRecords:  'Aucun enregistrement trouvé.',
 
   errorPrefix: '⚠',
+
+  toggleLight: 'Mode clair',
+  toggleDark:  'Mode sombre',
+
+  tryDemo:   'Voir un exemple',
+  demoLabel: 'Démo — données simulées',
+
+  recentScans:  'Recherches récentes',
+  clearHistory: 'Effacer',
+  noHistory:    'Aucune recherche récente.',
+  historyTypes: { headers: 'En-têtes', password: 'Mot de passe', breach: 'Fuite', domain: 'Domaine' },
+
+  exportPdf: 'Exporter PDF',
+
+  bulkMode:        'Plusieurs domaines',
+  singleMode:      'Domaine unique',
+  bulkPlaceholder: 'Un domaine par ligne\nexemple.com\ngoogle.com',
+  bulkAudit:       'Tout auditer',
+  bulkAuditing:    'Audit en cours…',
+  bulkResults:     (n) => `${n} domaine${n > 1 ? 's' : ''} audité${n > 1 ? 's' : ''}`,
+
+  checks: {
+    'header.csp':  { label: 'Content-Security-Policy', rec: 'Ajoutez un en-tête CSP pour restreindre les scripts et ressources autorisés.', why: 'Empêche les attaquants d\'injecter des scripts malveillants dans vos pages (XSS).' },
+    'header.hsts': { label: 'Strict-Transport-Security', rec: 'Ajoutez HSTS pour forcer les navigateurs à utiliser HTTPS.', why: 'Garantit que les navigateurs ne se connectent jamais en HTTP non chiffré, même si l\'utilisateur tape « http:// ».' },
+    'header.xfo':  { label: 'X-Frame-Options', rec: 'Ajoutez X-Frame-Options: DENY pour empêcher l\'intégration dans des iframes.', why: 'Bloque les attaques de clickjacking où des attaquants intègrent votre site invisiblement dans le leur.' },
+    'header.xcto': { label: 'X-Content-Type-Options', rec: 'Ajoutez X-Content-Type-Options: nosniff.', why: 'Empêche les navigateurs de deviner le type de fichier, une technique exploitée pour exécuter du code malveillant.' },
+    'header.rp':   { label: 'Referrer-Policy', rec: 'Ajoutez Referrer-Policy: strict-origin-when-cross-origin.', why: 'Contrôle les informations d\'URL partagées quand les utilisateurs cliquent sur des liens, protégeant leur vie privée.' },
+    'header.pp':   { label: 'Permissions-Policy', rec: 'Ajoutez un en-tête Permissions-Policy pour restreindre l\'accès à la caméra, au micro, etc.', why: 'Limite les fonctionnalités du navigateur (caméra, localisation, micro) accessibles par la page.' },
+    'header.https_redirect': { label: 'Redirection HTTP → HTTPS', rec: 'Configurez votre serveur pour rediriger tout le trafic HTTP vers HTTPS.', why: 'Sans cela, les utilisateurs qui tapent votre URL sans « https » naviguent sans chiffrement.' },
+    'ssl.valid':  { label: 'Certificat valide', rec: 'Renouvelez votre certificat SSL — il est expiré ou pas encore actif.', why: 'Un certificat invalide affiche un avertissement effrayant à vos visiteurs.' },
+    'ssl.expiry': { label: 'Certificat valide plus de 30 jours', rec: 'Renouvelez votre certificat avant son expiration.', why: 'Une fois expiré, votre site affiche une alerte de sécurité et vos visiteurs fuiront.' },
+    'ssl.tls':    { label: 'TLS 1.2 ou supérieur', rec: 'Configurez votre serveur pour utiliser TLS 1.2 ou TLS 1.3.', why: 'Les versions plus anciennes (SSL 3.0, TLS 1.0) ont des failles connues exploitables.' },
+    'ssl.sig':    { label: 'Algorithme de signature robuste', rec: 'Utilisez SHA-256 ou plus fort. Évitez SHA-1 et MD5.', why: 'Les algorithmes faibles peuvent être falsifiés, permettant à un attaquant d\'usurper votre identité.' },
+    'pwd.length':    { label: 'Longueur ≥ 12 caractères', rec: 'Utilisez au moins 12 caractères.', why: 'Chaque caractère supplémentaire multiplie le temps nécessaire pour forcer le mot de passe.' },
+    'pwd.uppercase': { label: 'Contient des majuscules', rec: 'Mélangez majuscules et minuscules.', why: 'Élargit le jeu de caractères, rendant le mot de passe plus difficile à deviner.' },
+    'pwd.numbers':   { label: 'Contient des chiffres', rec: 'Ajoutez des chiffres à votre mot de passe.', why: 'Les chiffres ajoutent de l\'imprévisibilité qui complique les attaques par dictionnaire.' },
+    'pwd.special':   { label: 'Contient des caractères spéciaux', rec: 'Ajoutez des caractères spéciaux : !@#$%…', why: 'Les symboles augmentent considérablement le nombre de combinaisons possibles.' },
+    'pwd.not_pwned': { label: 'Absent des fuites de données', rec: 'Ce mot de passe figure dans des fuites — changez-le immédiatement sur tous vos comptes.', why: 'Les attaquants essayent d\'abord les mots de passe déjà compromis. Un mot de passe fuité est inutilisable.' },
+    'pwd.entropy':   { label: 'Entropie ≥ 60 bits', rec: 'Augmentez la longueur ou la variété des caractères.', why: 'L\'entropie mesure l\'imprévisibilité réelle. En dessous de 60 bits, un ordinateur moderne peut le craquer en quelques heures.' },
+  },
 };
 
 // ── Spanish ────────────────────────────────────────────────────────────────
@@ -343,6 +455,46 @@ const es: Translations = {
   noRecords:  'No se encontraron registros.',
 
   errorPrefix: '⚠',
+
+  toggleLight: 'Modo claro',
+  toggleDark:  'Modo oscuro',
+
+  tryDemo:   'Ver un ejemplo',
+  demoLabel: 'Demo — datos simulados',
+
+  recentScans:  'Búsquedas recientes',
+  clearHistory: 'Borrar',
+  noHistory:    'No hay búsquedas recientes.',
+  historyTypes: { headers: 'Cabeceras', password: 'Contraseña', breach: 'Filtración', domain: 'Dominio' },
+
+  exportPdf: 'Exportar PDF',
+
+  bulkMode:        'Varios dominios',
+  singleMode:      'Dominio único',
+  bulkPlaceholder: 'Un dominio por línea\nejemplo.com\ngoogle.com',
+  bulkAudit:       'Auditar todo',
+  bulkAuditing:    'Auditando…',
+  bulkResults:     (n) => `${n} dominio${n > 1 ? 's' : ''} auditado${n > 1 ? 's' : ''}`,
+
+  checks: {
+    'header.csp':  { label: 'Content-Security-Policy', rec: 'Añade una cabecera CSP para restringir los scripts y recursos permitidos.', why: 'Evita que los atacantes inyecten scripts maliciosos en tus páginas (XSS).' },
+    'header.hsts': { label: 'Strict-Transport-Security', rec: 'Añade HSTS para forzar a los navegadores a usar HTTPS.', why: 'Garantiza que los navegadores nunca se conecten por HTTP sin cifrar.' },
+    'header.xfo':  { label: 'X-Frame-Options', rec: 'Añade X-Frame-Options: DENY para evitar que tu página se incruste en iframes.', why: 'Bloquea ataques de clickjacking donde los atacantes incrustan tu sitio invisiblemente.' },
+    'header.xcto': { label: 'X-Content-Type-Options', rec: 'Añade X-Content-Type-Options: nosniff.', why: 'Evita que los navegadores adivinen el tipo de archivo, técnica usada para ejecutar código malicioso.' },
+    'header.rp':   { label: 'Referrer-Policy', rec: 'Añade Referrer-Policy: strict-origin-when-cross-origin.', why: 'Controla qué información de URL se comparte cuando los usuarios hacen clic en enlaces.' },
+    'header.pp':   { label: 'Permissions-Policy', rec: 'Añade una cabecera Permissions-Policy para restringir el acceso a cámara, micrófono, etc.', why: 'Limita qué funciones del navegador (cámara, ubicación, micrófono) puede usar la página.' },
+    'header.https_redirect': { label: 'Redirección HTTP → HTTPS', rec: 'Configura tu servidor para redirigir todo el tráfico HTTP a HTTPS.', why: 'Sin esto, los usuarios que escriban tu URL sin "https" navegan sin cifrado.' },
+    'ssl.valid':  { label: 'Certificado válido', rec: 'Renueva tu certificado SSL — está caducado o aún no está activo.', why: 'Un certificado inválido muestra una advertencia aterradora a tus visitantes.' },
+    'ssl.expiry': { label: 'Certificado válido más de 30 días', rec: 'Renueva tu certificado antes de que caduque.', why: 'Al caducar, tu sitio muestra una alerta de seguridad y los visitantes se irán.' },
+    'ssl.tls':    { label: 'TLS 1.2 o superior', rec: 'Configura tu servidor para usar TLS 1.2 o TLS 1.3.', why: 'Las versiones antiguas (SSL 3.0, TLS 1.0) tienen vulnerabilidades conocidas.' },
+    'ssl.sig':    { label: 'Algoritmo de firma robusto', rec: 'Usa SHA-256 o más fuerte. Evita SHA-1 y MD5.', why: 'Los algoritmos débiles pueden falsificarse, permitiendo a un atacante suplantar tu sitio.' },
+    'pwd.length':    { label: 'Longitud ≥ 12 caracteres', rec: 'Usa al menos 12 caracteres.', why: 'Cada carácter extra multiplica el tiempo necesario para forzar la contraseña.' },
+    'pwd.uppercase': { label: 'Contiene mayúsculas', rec: 'Mezcla mayúsculas y minúsculas.', why: 'Amplía el conjunto de caracteres, haciendo la contraseña más difícil de adivinar.' },
+    'pwd.numbers':   { label: 'Contiene números', rec: 'Añade números a tu contraseña.', why: 'Los dígitos añaden imprevisibilidad que dificulta los ataques de diccionario.' },
+    'pwd.special':   { label: 'Contiene caracteres especiales', rec: 'Añade caracteres especiales: !@#$%…', why: 'Los símbolos amplían drásticamente el número de combinaciones posibles.' },
+    'pwd.not_pwned': { label: 'Ausente de filtraciones de datos', rec: 'Esta contraseña aparece en filtraciones — cámbiala inmediatamente en todas tus cuentas.', why: 'Los atacantes prueban primero las contraseñas ya comprometidas. Una contraseña filtrada es inútil.' },
+    'pwd.entropy':   { label: 'Entropía ≥ 60 bits', rec: 'Aumenta la longitud o variedad de caracteres.', why: 'La entropía mide la imprevisibilidad real. Por debajo de 60 bits, un ordenador moderno puede descifrarla en horas.' },
+  },
 };
 
 export const translations: Record<Locale, Translations> = { en, fr, es };

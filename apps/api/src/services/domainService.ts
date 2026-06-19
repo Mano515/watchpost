@@ -3,13 +3,15 @@ import { promises as dns } from 'dns';
 import { DomainAuditResult, SslResult, DnsResult, ScoreDetail } from '@watchpost/shared-types';
 import { buildScore } from '../scoring';
 import { httpGet } from '../http/client';
+import { TtlCache } from '../cache/ttlCache';
+
+const cache = new TtlCache<DomainAuditResult>(5 * 60_000);
 
 function getCertificate(domain: string): Promise<tls.PeerCertificate & { valid_from: string; valid_to: string }> {
   return new Promise((resolve, reject) => {
     const socket = tls.connect(443, domain, { servername: domain, rejectUnauthorized: false }, () => {
-      const cert = socket.getPeerCertificate(true);
+      resolve(socket.getPeerCertificate(true) as tls.PeerCertificate & { valid_from: string; valid_to: string });
       socket.destroy();
-      resolve(cert as tls.PeerCertificate & { valid_from: string; valid_to: string });
     });
     socket.setTimeout(10_000, () => { socket.destroy(); reject(new Error('TLS connection timeout')); });
     socket.on('error', reject);
@@ -24,36 +26,19 @@ async function checkSsl(domain: string): Promise<SslResult> {
   const daysUntilExpiry = Math.floor((validTo.getTime() - now.getTime()) / 86_400_000);
   const issuer = cert.issuer?.O ?? cert.issuer?.CN ?? 'Unknown';
   const signatureAlgorithm = (cert as unknown as Record<string, string>).sigalg ?? 'Unknown';
+
   const details: ScoreDetail[] = [
-    {
-      label: 'Certificate is valid',
-      passed: now >= validFrom && now <= validTo,
-      recommendation: 'Certificate is expired or not yet valid.',
-    },
-    {
-      label: 'Expires in more than 30 days',
-      passed: daysUntilExpiry > 30,
-      recommendation: `Certificate expires in ${daysUntilExpiry} days. Renew soon.`,
-    },
-    {
-      label: 'TLS 1.2 or higher',
-      passed: true,
-      recommendation: 'Ensure server is configured to use TLS 1.2 or higher.',
-    },
-    {
-      label: 'Strong signature algorithm',
-      passed: !signatureAlgorithm.toLowerCase().includes('sha1') && !signatureAlgorithm.toLowerCase().includes('md5'),
-      recommendation: 'Use SHA-256 or stronger signature algorithm.',
-    },
+    { key: 'ssl.valid',   label: 'Certificate is valid',          passed: now >= validFrom && now <= validTo },
+    { key: 'ssl.expiry',  label: 'Expires in more than 30 days',  passed: daysUntilExpiry > 30 },
+    { key: 'ssl.tls',     label: 'TLS 1.2 or higher',             passed: true },
+    { key: 'ssl.sig',     label: 'Strong signature algorithm',     passed: !signatureAlgorithm.toLowerCase().includes('sha1') && !signatureAlgorithm.toLowerCase().includes('md5') },
   ];
 
   return {
-    issuer,
+    issuer, signatureAlgorithm, tlsVersion: 'TLS 1.2+',
     validFrom: validFrom.toISOString(),
     validTo: validTo.toISOString(),
     daysUntilExpiry,
-    tlsVersion: 'TLS 1.2+',
-    signatureAlgorithm,
     ...buildScore(details),
   };
 }
@@ -71,16 +56,13 @@ async function rdapLookup(domain: string): Promise<DnsResult['whois']> {
     const expires = events.find((e) =>
       e.eventAction === 'expiration' || e.eventAction === 'domain expiration'
     )?.eventDate ?? '';
-
     const entities = (data.entities as Array<{ roles: string[]; vcardArray?: unknown[] }>) ?? [];
     const registrarEntity = entities.find((e) => e.roles.includes('registrar'));
     const registrarName = extractVcardFn(registrarEntity?.vcardArray) ?? 'Unknown';
     const domainAge = created ? Math.floor((Date.now() - new Date(created).getTime()) / 86_400_000) : 0;
 
     return { registrar: registrarName, createdDate: created, expiresDate: expires, domainAge };
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function extractVcardFn(vcardArray: unknown): string | null {
@@ -112,15 +94,18 @@ async function dnsLookup(domain: string): Promise<DnsResult> {
 }
 
 export async function auditDomain(domain: string): Promise<DomainAuditResult> {
-  const [sslResult, dnsResult] = await Promise.allSettled([
-    checkSsl(domain),
-    dnsLookup(domain),
-  ]);
+  const cached = cache.get(domain);
+  if (cached) return cached;
 
-  return {
+  const [sslResult, dnsResult] = await Promise.allSettled([checkSsl(domain), dnsLookup(domain)]);
+
+  const result: DomainAuditResult = {
     domain,
     ssl:      sslResult.status === 'fulfilled' ? sslResult.value : null,
     sslError: sslResult.status === 'rejected'  ? (sslResult.reason as Error).message : null,
     dns:      dnsResult.status === 'fulfilled' ? dnsResult.value : { records: { A: [], MX: [], TXT: [], NS: [] }, whois: null },
   };
+
+  cache.set(domain, result);
+  return result;
 }

@@ -7,7 +7,8 @@ export interface SecurityScore {
 }
 
 export interface ScoreDetail {
-  label: string;
+  key?: string;   // i18n key — frontend looks up translated label/rec/explanation
+  label: string;  // English fallback
   passed: boolean;
   recommendation?: string;
 }

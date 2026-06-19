@@ -1,7 +1,7 @@
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── Design tokens ── */
+/* ── Design tokens — dark (default) ── */
 :root {
   --bg:        #0d1117;
   --surface:   #161b22;
@@ -38,6 +38,25 @@
 
   --transition: 0.15s ease;
   --shadow: 0 1px 3px #0008, 0 1px 2px #0004;
+}
+
+/* ── Light mode ── */
+[data-theme="light"] {
+  --bg:        #ffffff;
+  --surface:   #f6f8fa;
+  --surface-2: #eaeef2;
+  --border:    #d0d7de;
+  --border-focus: #0969da;
+  --text:      #1f2328;
+  --text-2:    #656d76;
+  --text-muted:#8c959f;
+  --accent:    #0969da;
+  --accent-fg: #ffffff;
+  --ok-bg:     #dafbe1;
+  --ok-border: #82e89a;
+  --err-bg:    #ffebe9;
+  --err-border:#ffb8b0;
+  --shadow:    0 1px 3px #0001, 0 1px 2px #0001;
 }
 
 /* ── Base ── */
@@ -489,4 +508,142 @@ a:hover { text-decoration-thickness: 2px; }
 }
 @media (max-width: 500px) {
   .topbar { justify-content: center; }
+}
+
+/* ── Theme toggle ── */
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.3rem 0.6rem;
+  font-size: 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+  line-height: 1;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+.theme-toggle:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+
+/* ── Demo banner ── */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 0.6rem 1rem;
+  font-size: 0.85rem;
+  color: var(--warn);
+  margin-bottom: 1.25rem;
+}
+.demo-banner svg { flex-shrink: 0; }
+
+/* ── History section ── */
+.history-section { margin-bottom: 2rem; }
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+.history-header h2 { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+.history-clear {
+  background: none; border: none;
+  color: var(--err); font-size: 0.8rem;
+  cursor: pointer; padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+.history-clear:hover { background: var(--err-bg); }
+.history-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.history-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.6rem 0.9rem;
+  font-size: 0.85rem; color: var(--text-2);
+  text-overflow: ellipsis; overflow: hidden; white-space: nowrap;
+}
+.history-item .h-grade {
+  font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
+  width: 1.4rem; text-align: center;
+}
+.history-item .h-type {
+  font-size: 0.75rem; color: var(--text-muted);
+  background: var(--surface-2); padding: 0.1rem 0.4rem;
+  border-radius: 999px; flex-shrink: 0;
+}
+.history-item .h-input { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.history-empty { font-size: 0.85rem; color: var(--text-muted); }
+
+/* ── Export PDF button ── */
+.export-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.82rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.export-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Bulk scan ── */
+.bulk-toggle {
+  background: none; border: 1px solid var(--border);
+  color: var(--text-muted); padding: 0.35rem 0.8rem;
+  font-size: 0.82rem; border-radius: var(--radius-sm);
+  cursor: pointer; transition: border-color var(--transition), color var(--transition);
+}
+.bulk-toggle:hover { border-color: var(--accent); color: var(--text); }
+.bulk-textarea {
+  width: 100%; padding: 0.75rem;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text);
+  font-family: var(--font-mono); font-size: 0.85rem;
+  resize: vertical; min-height: 8rem;
+  transition: border-color var(--transition);
+}
+.bulk-textarea:focus { outline: none; border-color: var(--border-focus); }
+.bulk-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+.bulk-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1rem 1.25rem;
+}
+.bulk-card h3 { font-size: 0.9rem; margin-bottom: 0.5rem; word-break: break-all; }
+
+/* ── Check-item "why" tooltip ── */
+.check-why-btn {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 0.75rem;
+  cursor: pointer; padding: 0 0.25rem;
+  border-radius: 3px; line-height: 1;
+  flex-shrink: 0;
+}
+.check-why-btn:hover { color: var(--accent); }
+.check-why { font-size: 0.8rem; color: var(--text-2); margin-top: 0.3rem; padding-left: 1.5rem; }
+
+/* ── Slide-in animation ── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: slideIn 0.25s ease both;
+}
+
+/* ── Print / PDF export ── */
+@media print {
+  .topbar, .skip-link, .nav-link, .demo-banner,
+  .btn, .export-btn, .theme-toggle, .lang-btn,
+  .history-section, .bulk-toggle, .check-why-btn { display: none !important; }
+  body { background: #fff; color: #000; }
+  .card, .result-panel { box-shadow: none; border: 1px solid #ccc; }
+  .module-layout { max-width: 100%; padding: 1rem; }
 }

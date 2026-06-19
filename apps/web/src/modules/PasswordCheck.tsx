@@ -4,23 +4,34 @@ import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
+import { useHistory } from '../hooks/useHistory';
+import { demoPassword } from '../demo/mockData';
 import type { PasswordCheckResult } from '@watchpost/shared-types';
 
 export default function PasswordCheck() {
   const { t } = useT();
+  const { push } = useHistory();
   const [password, setPassword] = useState('');
   const [result, setResult] = useState<PasswordCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const inputId = useId();
   const errorId = useId();
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError(null); setResult(null);
-    try { setResult(await api.checkPassword(password)); }
-    catch (err) { setError((err as Error).message); }
+    setLoading(true); setError(null); setResult(null); setIsDemo(false);
+    try {
+      const r = await api.checkPassword(password);
+      setResult(r);
+      push({ type: 'password', input: '••••••••', grade: r.grade });
+    } catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
+  }
+
+  function loadDemo() {
+    setResult(demoPassword); setIsDemo(true); setError(null);
   }
 
   return (
@@ -52,6 +63,9 @@ export default function PasswordCheck() {
             </button>
           </div>
         </div>
+        <button type="button" className="export-btn" style={{ marginBottom: '0.5rem' }} onClick={loadDemo}>
+          {t.tryDemo}
+        </button>
       </form>
 
       {error && (
@@ -64,6 +78,14 @@ export default function PasswordCheck() {
         {result && (
           <>
             <hr className="divider" />
+            {isDemo && (
+              <p className="demo-banner" role="status">
+                <span aria-hidden="true">⚠</span> {t.demoLabel}
+              </p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+              <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
+            </div>
             <ScoreBadge score={result.score} grade={result.grade} />
             <div className="info-grid" style={{ marginBottom: '1.25rem' }}>
               <div className="info-cell">

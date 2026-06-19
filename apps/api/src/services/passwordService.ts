@@ -12,11 +12,6 @@ function calcEntropy(password: string): number {
   return Math.log2(Math.pow(charset, password.length));
 }
 
-function entropyToSeconds(entropy: number): number {
-  const guessesPerSecond = 1e10;
-  return Math.pow(2, entropy) / guessesPerSecond;
-}
-
 async function checkHIBP(password: string): Promise<number> {
   const sha1 = createHash('sha1').update(password).digest('hex').toUpperCase();
   const prefix = sha1.slice(0, 5);
@@ -31,40 +26,16 @@ async function checkHIBP(password: string): Promise<number> {
 
 export async function checkPassword(password: string): Promise<PasswordCheckResult> {
   const entropy = calcEntropy(password);
-  const crackTimeSeconds = entropyToSeconds(entropy);
+  const crackTimeSeconds = Math.pow(2, entropy) / 1e10;
   const pwnedCount = await checkHIBP(password);
 
   const details: ScoreDetail[] = [
-    {
-      label: 'Length ≥ 12 characters',
-      passed: password.length >= 12,
-      recommendation: 'Use at least 12 characters.',
-    },
-    {
-      label: 'Contains uppercase letters',
-      passed: /[A-Z]/.test(password),
-      recommendation: 'Add uppercase letters.',
-    },
-    {
-      label: 'Contains numbers',
-      passed: /[0-9]/.test(password),
-      recommendation: 'Add numbers.',
-    },
-    {
-      label: 'Contains special characters',
-      passed: /[^a-zA-Z0-9]/.test(password),
-      recommendation: 'Add special characters (!@#$...).',
-    },
-    {
-      label: 'Not found in known data breaches',
-      passed: pwnedCount === 0,
-      recommendation: 'This password appeared in data breaches. Change it immediately.',
-    },
-    {
-      label: 'Entropy ≥ 60 bits',
-      passed: entropy >= 60,
-      recommendation: 'Increase password complexity for better entropy.',
-    },
+    { key: 'pwd.length',    label: 'Length ≥ 12 characters',           passed: password.length >= 12 },
+    { key: 'pwd.uppercase', label: 'Contains uppercase letters',        passed: /[A-Z]/.test(password) },
+    { key: 'pwd.numbers',   label: 'Contains numbers',                  passed: /[0-9]/.test(password) },
+    { key: 'pwd.special',   label: 'Contains special characters',       passed: /[^a-zA-Z0-9]/.test(password) },
+    { key: 'pwd.not_pwned', label: 'Not found in known data breaches',  passed: pwnedCount === 0 },
+    { key: 'pwd.entropy',   label: 'Entropy ≥ 60 bits',                 passed: entropy >= 60 },
   ];
 
   return { entropy, crackTimeSeconds, pwnedCount, ...buildScore(details) };

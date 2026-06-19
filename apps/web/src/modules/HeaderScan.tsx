@@ -4,23 +4,34 @@ import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
+import { useHistory } from '../hooks/useHistory';
+import { demoHeaders } from '../demo/mockData';
 import type { HeaderScanResult } from '@watchpost/shared-types';
 
 export default function HeaderScan() {
   const { t } = useT();
+  const { push } = useHistory();
   const [url, setUrl] = useState('https://example.com');
   const [result, setResult] = useState<HeaderScanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const inputId = useId();
   const errorId = useId();
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true); setError(null); setResult(null);
-    try { setResult(await api.scanHeaders(url)); }
-    catch (err) { setError((err as Error).message); }
+    setLoading(true); setError(null); setResult(null); setIsDemo(false);
+    try {
+      const r = await api.scanHeaders(url);
+      setResult(r);
+      push({ type: 'headers', input: url, grade: r.grade });
+    } catch (err) { setError((err as Error).message); }
     finally { setLoading(false); }
+  }
+
+  function loadDemo() {
+    setResult(demoHeaders); setIsDemo(true); setError(null);
   }
 
   return (
@@ -46,6 +57,9 @@ export default function HeaderScan() {
             </button>
           </div>
         </div>
+        <button type="button" className="export-btn" style={{ marginBottom: '0.5rem' }} onClick={loadDemo}>
+          {t.tryDemo}
+        </button>
       </form>
 
       {error && (
@@ -58,6 +72,14 @@ export default function HeaderScan() {
         {result && (
           <>
             <hr className="divider" />
+            {isDemo && (
+              <p className="demo-banner" role="status">
+                <span aria-hidden="true">⚠</span> {t.demoLabel}
+              </p>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+              <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
+            </div>
             <ScoreBadge score={result.score} grade={result.grade} />
             <ResultPanel details={result.details} />
           </>
