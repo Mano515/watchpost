@@ -66,7 +66,8 @@ export interface Translations {
   expires:     string;
   noRecords:   string;
 
-  errorPrefix: string;
+  errorPrefix:  string;
+  rateLimited:  (seconds: number) => string;
 
   // Theme
   toggleLight: string;
@@ -190,7 +191,8 @@ const en: Translations = {
   expires:    'Expires',
   noRecords:  'No records found.',
 
-  errorPrefix: '⚠',
+  errorPrefix:  '⚠',
+  rateLimited:  (s) => `Too many requests — please wait ${s} second${s > 1 ? 's' : ''}.`,
 
   toggleLight: 'Light mode',
   toggleDark:  'Dark mode',
@@ -322,7 +324,8 @@ const fr: Translations = {
   expires:    'Expire le',
   noRecords:  'Aucun enregistrement trouvé.',
 
-  errorPrefix: '⚠',
+  errorPrefix:  '⚠',
+  rateLimited:  (s) => `Trop de requêtes — veuillez patienter ${s} seconde${s > 1 ? 's' : ''}.`,
 
   toggleLight: 'Mode clair',
   toggleDark:  'Mode sombre',
@@ -454,7 +457,8 @@ const es: Translations = {
   expires:    'Caduca',
   noRecords:  'No se encontraron registros.',
 
-  errorPrefix: '⚠',
+  errorPrefix:  '⚠',
+  rateLimited:  (s) => `Demasiadas solicitudes — espere ${s} segundo${s > 1 ? 's' : ''}.`,
 
   toggleLight: 'Modo claro',
   toggleDark:  'Modo oscuro',

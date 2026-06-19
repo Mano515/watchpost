@@ -1,21 +1,25 @@
 import { useState, useId } from 'react';
+import { useLocation } from 'react-router-dom';
 import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { useRateLimit } from '../hooks/useRateLimit';
 import { demoHeaders } from '../demo/mockData';
 import type { HeaderScanResult } from '@watchpost/shared-types';
 
 export default function HeaderScan() {
   const { t } = useT();
   const { push } = useHistory();
-  const [url, setUrl] = useState('https://example.com');
+  const location = useLocation();
+  const [url, setUrl] = useState<string>(location.state?.input ?? 'https://example.com');
   const [result, setResult] = useState<HeaderScanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
+  const { countdown, handleError, isRateLimited } = useRateLimit();
   const inputId = useId();
   const errorId = useId();
 
@@ -26,13 +30,13 @@ export default function HeaderScan() {
       const r = await api.scanHeaders(url);
       setResult(r);
       push({ type: 'headers', input: url, grade: r.grade });
-    } catch (err) { setError((err as Error).message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = handleError(err);
+      if (msg) setError(msg);
+    } finally { setLoading(false); }
   }
 
-  function loadDemo() {
-    setResult(demoHeaders); setIsDemo(true); setError(null);
-  }
+  function loadDemo() { setResult(demoHeaders); setIsDemo(true); setError(null); }
 
   return (
     <ModuleLayout title={t.modules.headers.title} icon="🛡️" iconLabel="Security tool" explainer={t.modules.headers.explainer}>
@@ -41,17 +45,13 @@ export default function HeaderScan() {
           <label className="field-label" htmlFor={inputId}>{t.targetUrl}</label>
           <div className="input-row">
             <input
-              id={inputId}
-              className="input"
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              id={inputId} className="input" type="url"
+              value={url} onChange={(e) => setUrl(e.target.value)}
               placeholder={t.placeholderUrl}
               aria-describedby={error ? errorId : undefined}
-              aria-invalid={!!error}
-              required
+              aria-invalid={!!error} required
             />
-            <button type="submit" className="btn btn-primary" disabled={loading || !url} aria-busy={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading || !url || isRateLimited} aria-busy={loading}>
               {loading && <span className="spinner" aria-hidden="true" />}
               {loading ? t.scanning : t.analyze}
             </button>
@@ -62,7 +62,10 @@ export default function HeaderScan() {
         </button>
       </form>
 
-      {error && (
+      {isRateLimited && (
+        <p className="error-msg" role="alert">{t.rateLimited(countdown)}</p>
+      )}
+      {error && !isRateLimited && (
         <p id={errorId} className="error-msg" role="alert">
           <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>
@@ -72,11 +75,7 @@ export default function HeaderScan() {
         {result && (
           <>
             <hr className="divider" />
-            {isDemo && (
-              <p className="demo-banner" role="status">
-                <span aria-hidden="true">⚠</span> {t.demoLabel}
-              </p>
-            )}
+            {isDemo && <p className="demo-banner" role="status"><span aria-hidden="true">⚠</span> {t.demoLabel}</p>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
               <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
             </div>

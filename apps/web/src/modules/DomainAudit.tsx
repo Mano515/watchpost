@@ -1,10 +1,12 @@
 import { useState, useId } from 'react';
+import { useLocation } from 'react-router-dom';
 import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { useRateLimit } from '../hooks/useRateLimit';
 import { demoDomain } from '../demo/mockData';
 import type { DomainAuditResult } from '@watchpost/shared-types';
 
@@ -104,7 +106,8 @@ function DomainResult({ result, t }: { result: DomainAuditResult; t: ReturnType<
 export default function DomainAudit() {
   const { t } = useT();
   const { push } = useHistory();
-  const [domain, setDomain] = useState('example.com');
+  const location = useLocation();
+  const [domain, setDomain] = useState<string>(location.state?.input ?? 'example.com');
   const [bulkText, setBulkText] = useState('');
   const [result, setResult] = useState<DomainAuditResult | null>(null);
   const [bulkResults, setBulkResults] = useState<DomainAuditResult[] | null>(null);
@@ -112,6 +115,7 @@ export default function DomainAudit() {
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const [isBulk, setIsBulk] = useState(false);
+  const { countdown, handleError, isRateLimited } = useRateLimit();
   const inputId = useId();
   const bulkId = useId();
   const errorId = useId();
@@ -123,8 +127,10 @@ export default function DomainAudit() {
       const r = await api.auditDomain(domain);
       setResult(r);
       push({ type: 'domain', input: domain, grade: r.ssl?.grade });
-    } catch (err) { setError((err as Error).message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = handleError(err);
+      if (msg) setError(msg);
+    } finally { setLoading(false); }
   }
 
   async function runBulk(e: React.FormEvent) {
@@ -135,8 +141,10 @@ export default function DomainAudit() {
     try {
       const results: DomainAuditResult[] = await Promise.all(domains.map((d) => api.auditDomain(d)));
       setBulkResults(results);
-    } catch (err) { setError((err as Error).message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = handleError(err);
+      if (msg) setError(msg);
+    } finally { setLoading(false); }
   }
 
   function loadDemo() {
@@ -178,7 +186,7 @@ export default function DomainAudit() {
                 aria-invalid={!!error}
                 required
               />
-              <button type="submit" className="btn btn-primary" disabled={loading || !domain} aria-busy={loading}>
+              <button type="submit" className="btn btn-primary" disabled={loading || !domain || isRateLimited} aria-busy={loading}>
                 {loading && <span className="spinner" aria-hidden="true" />}
                 {loading ? t.auditing : t.analyze}
               </button>
@@ -208,7 +216,10 @@ export default function DomainAudit() {
         </form>
       )}
 
-      {error && (
+      {isRateLimited && (
+        <p className="error-msg" role="alert">{t.rateLimited(countdown)}</p>
+      )}
+      {error && !isRateLimited && (
         <p id={errorId} className="error-msg" role="alert">
           <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>

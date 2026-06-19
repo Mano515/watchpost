@@ -5,6 +5,7 @@ import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { useRateLimit } from '../hooks/useRateLimit';
 import { demoPassword } from '../demo/mockData';
 import type { PasswordCheckResult } from '@watchpost/shared-types';
 
@@ -16,6 +17,7 @@ export default function PasswordCheck() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
+  const { countdown, handleError, isRateLimited } = useRateLimit();
   const inputId = useId();
   const errorId = useId();
 
@@ -26,13 +28,13 @@ export default function PasswordCheck() {
       const r = await api.checkPassword(password);
       setResult(r);
       push({ type: 'password', input: '••••••••', grade: r.grade });
-    } catch (err) { setError((err as Error).message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      const msg = handleError(err);
+      if (msg) setError(msg);
+    } finally { setLoading(false); }
   }
 
-  function loadDemo() {
-    setResult(demoPassword); setIsDemo(true); setError(null);
-  }
+  function loadDemo() { setResult(demoPassword); setIsDemo(true); setError(null); }
 
   return (
     <ModuleLayout title={t.modules.password.title} icon="🔑" iconLabel="Security tool" explainer={t.modules.password.explainer}>
@@ -46,18 +48,13 @@ export default function PasswordCheck() {
           <label className="field-label" htmlFor={inputId}>{t.passwordLabel}</label>
           <div className="input-row">
             <input
-              id={inputId}
-              className="input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t.placeholderPassword}
-              autoComplete="off"
+              id={inputId} className="input" type="password"
+              value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder={t.placeholderPassword} autoComplete="off"
               aria-describedby={error ? errorId : undefined}
-              aria-invalid={!!error}
-              required
+              aria-invalid={!!error} required
             />
-            <button type="submit" className="btn btn-primary" disabled={loading || !password} aria-busy={loading}>
+            <button type="submit" className="btn btn-primary" disabled={loading || !password || isRateLimited} aria-busy={loading}>
               {loading && <span className="spinner" aria-hidden="true" />}
               {loading ? t.analysing : t.analyze}
             </button>
@@ -68,7 +65,10 @@ export default function PasswordCheck() {
         </button>
       </form>
 
-      {error && (
+      {isRateLimited && (
+        <p className="error-msg" role="alert">{t.rateLimited(countdown)}</p>
+      )}
+      {error && !isRateLimited && (
         <p id={errorId} className="error-msg" role="alert">
           <span aria-hidden="true">{t.errorPrefix}</span> {error}
         </p>
@@ -78,11 +78,7 @@ export default function PasswordCheck() {
         {result && (
           <>
             <hr className="divider" />
-            {isDemo && (
-              <p className="demo-banner" role="status">
-                <span aria-hidden="true">⚠</span> {t.demoLabel}
-              </p>
-            )}
+            {isDemo && <p className="demo-banner" role="status"><span aria-hidden="true">⚠</span> {t.demoLabel}</p>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
               <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
             </div>
@@ -98,10 +94,7 @@ export default function PasswordCheck() {
               </div>
               <div className="info-cell">
                 <div className="info-cell__label">{t.knownBreaches}</div>
-                <div
-                  className="info-cell__value"
-                  style={{ color: result.pwnedCount > 0 ? 'var(--err)' : 'var(--ok)' }}
-                >
+                <div className="info-cell__value" style={{ color: result.pwnedCount > 0 ? 'var(--err)' : 'var(--ok)' }}>
                   {result.pwnedCount > 0 ? result.pwnedCount.toLocaleString() : t.noneFound}
                 </div>
               </div>

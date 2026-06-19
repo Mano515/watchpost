@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
-import { useHistory } from '../hooks/useHistory';
+import { useHistory, type HistoryEntry } from '../hooks/useHistory';
 
 const MODULE_KEYS = ['headers', 'password', 'breach', 'domain'] as const;
 const MODULE_PATHS: Record<typeof MODULE_KEYS[number], string> = {
@@ -39,14 +39,21 @@ export default function Home() {
           </div>
           <ul className="history-list" role="list">
             {entries.map((e) => (
-              <li key={e.id} className="history-item">
-                {e.grade && (
-                  <span className="h-grade" style={{ color: GRADE_COLOR[e.grade] ?? 'var(--text)' }}>
-                    {e.grade}
-                  </span>
-                )}
-                <span className="h-type">{t.historyTypes[e.type]}</span>
-                <span className="h-input">{e.input}</span>
+              <li key={e.id}>
+                <Link
+                  to={MODULE_PATHS[e.type]}
+                  state={{ input: e.input }}
+                  className="history-item"
+                  style={{ textDecoration: 'none' }}
+                >
+                  {e.grade && (
+                    <span className="h-grade" style={{ color: GRADE_COLOR[e.grade] ?? 'var(--text)' }}>
+                      {e.grade}
+                    </span>
+                  )}
+                  <span className="h-type">{t.historyTypes[e.type]}</span>
+                  <span className="h-input">{e.input}</span>
+                </Link>
               </li>
             ))}
           </ul>
