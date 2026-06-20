@@ -3,7 +3,7 @@ import type { Grade } from '@watchpost/shared-types';
 
 export interface HistoryEntry {
   id: string;
-  type: 'headers' | 'password' | 'breach' | 'domain' | 'vuln';
+  type: 'site' | 'headers' | 'password' | 'breach' | 'domain' | 'vuln' | string;
   input: string;
   grade?: Grade;
   timestamp: number;

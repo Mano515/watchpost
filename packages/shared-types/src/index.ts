@@ -11,6 +11,7 @@ export interface ScoreDetail {
   label: string;  // English fallback
   passed: boolean;
   recommendation?: string;
+  informational?: boolean; // if true: shown in UI but excluded from score calculation
 }
 
 export function scoreToGrade(score: number): Grade {
@@ -30,16 +31,29 @@ export interface PasswordCheckResult extends SecurityScore {
   entropy: number;
   crackTimeSeconds: number; // raw value — frontend formats it
   pwnedCount: number;
+  strengthScore?: number;  // 0-4 from zxcvbn (0=very weak, 4=very strong)
+  suggestions?: string[];  // zxcvbn improvement tips
+  warning?: string;        // zxcvbn pattern warning
 }
+
+export type BreachRiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'safe';
 
 export interface BreachCheckResult {
   email: string;
   breached: boolean;
   breaches: BreachEntry[];
+  score: number;
+  grade: Grade;
+  riskLevel: BreachRiskLevel;
 }
 
 export interface BreachEntry {
   name: string;
+  date?: string;
+  dataTypes?: string[];
+  passwordRisk?: 'plain' | 'hashed' | 'none' | 'unknown';
+  recordCount?: number;
+  domain?: string;
 }
 
 export interface DomainAuditResult {
@@ -74,6 +88,39 @@ export interface VulnScanResult {
   score: number;
   grade: Grade;
   findings: VulnFinding[];
+  detectedStack?: string[];
+  crawledPages?: number;
+}
+
+export interface MonitorHistoryPoint {
+  score: number;
+  grade: Grade;
+  scannedAt: string;
+}
+
+export interface MonitorEntry {
+  id: string;
+  domain: string;
+  threshold: number;
+  frequency: 'daily' | 'weekly';
+  webhook?: string;
+  email?: string;
+  lastScore?: number;
+  lastGrade?: Grade;
+  lastScannedAt?: string;
+  createdAt: string;
+  history?: MonitorHistoryPoint[];
+  lastNewFindings?: number;
+  lastResolvedFindings?: number;
+  _lastFailedKeys?: string[];
+}
+
+export interface CiCheckResult {
+  pass: boolean;
+  domain: string;
+  score: number;
+  grade: Grade;
+  threshold: number;
 }
 
 export interface EmailSecurityResult {
@@ -98,4 +145,17 @@ export interface DnsResult {
     domainAge: number;
   } | null;
   emailSecurity: EmailSecurityResult;
+}
+
+export interface SiteAuditResult {
+  domain: string;
+  overallScore: number;
+  overallGrade: Grade;
+  headers: HeaderScanResult | null;
+  headersError: string | null;
+  vuln: VulnScanResult | null;
+  vulnError: string | null;
+  domainAudit: DomainAuditResult | null;
+  domainError: string | null;
+  scannedAt: string;
 }

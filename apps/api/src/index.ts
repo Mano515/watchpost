@@ -6,6 +6,10 @@ import { passwordRoutes } from './routes/password';
 import { breachRoutes } from './routes/breach';
 import { domainRoutes } from './routes/domain';
 import { vulnRoutes } from './routes/vuln';
+import { siteAuditRoutes } from './routes/siteAudit';
+import { ciRoutes } from './routes/ci';
+import { monitorRoutes } from './routes/monitor';
+import { startMonitorScheduler } from './services/monitorService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,12 +28,16 @@ app.use('/api', limiter);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
-app.use('/api/headers', headerRoutes);
-app.use('/api/password', passwordRoutes);
-app.use('/api/breach', breachRoutes);
-app.use('/api/domain', domainRoutes);
-app.use('/api/vuln', vulnRoutes);
+app.use('/api/headers',    headerRoutes);
+app.use('/api/password',   passwordRoutes);
+app.use('/api/breach',     breachRoutes);
+app.use('/api/domain',     domainRoutes);
+app.use('/api/vuln',       vulnRoutes);
+app.use('/api/site-audit', siteAuditRoutes);
+app.use('/api/ci',         ciRoutes);
+app.use('/api/monitor',    monitorRoutes);
 
 app.listen(PORT, () => {
   console.log(`Watchpost API running on http://localhost:${PORT}`);
+  startMonitorScheduler();
 });

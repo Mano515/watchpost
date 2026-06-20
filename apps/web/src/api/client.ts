@@ -4,6 +4,7 @@ import type {
   BreachCheckResult,
   DomainAuditResult,
   VulnScanResult,
+  SiteAuditResult,
 } from '@watchpost/shared-types';
 
 const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api';
@@ -43,4 +44,5 @@ export const api = {
   checkBreach:   (email: string)    => post<BreachCheckResult>('/breach',  { email }),
   auditDomain:   (domain: string)   => post<DomainAuditResult>('/domain',  { domain }),
   scanVulns:     (url: string)      => post<VulnScanResult>('/vuln',      { url }),
+  auditSite:     (domain: string)   => post<SiteAuditResult>('/site-audit', { domain }),
 };

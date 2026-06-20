@@ -1,5 +1,5 @@
-import { useState, useId } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useId, useRef, useEffect } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import ModuleLayout from '../components/ModuleLayout';
 import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
@@ -7,6 +7,7 @@ import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
 import { useRateLimit } from '../hooks/useRateLimit';
+import { downloadJson } from '../utils/downloadJson';
 import { demoDomain } from '../demo/mockData';
 import type { DomainAuditResult, EmailSecurityResult } from '@watchpost/shared-types';
 
@@ -159,7 +160,10 @@ export default function DomainAudit() {
   const { t } = useT();
   const { push } = useHistory();
   const location = useLocation();
-  const [domain, setDomain] = useState<string>(location.state?.input ?? 'example.com');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialDomain = searchParams.get('domain') ?? location.state?.input ?? 'example.com';
+  const [domain, setDomain] = useState<string>(initialDomain);
   const [bulkText, setBulkText] = useState('');
   const [result, setResult] = useState<DomainAuditResult | null>(null);
   const [bulkResults, setBulkResults] = useState<DomainAuditResult[] | null>(null);
@@ -167,22 +171,43 @@ export default function DomainAudit() {
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const [isBulk, setIsBulk] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { countdown, handleError, isRateLimited } = useRateLimit();
-  const inputId = useId();
-  const bulkId = useId();
-  const errorId = useId();
+  const inputId    = useId();
+  const bulkId     = useId();
+  const errorId    = useId();
+  const hasAutoRun = useRef(false);
 
-  async function runSingle(e: React.FormEvent) {
-    e.preventDefault();
+  async function performScan(targetDomain: string) {
     setLoading(true); setError(null); setResult(null); setIsDemo(false);
     try {
-      const r = await api.auditDomain(domain);
+      const r = await api.auditDomain(targetDomain);
       setResult(r);
-      push({ type: 'domain', input: domain, grade: r.ssl?.grade });
+      push({ type: 'domain', input: targetDomain, grade: r.ssl?.grade });
+      setSearchParams({ domain: targetDomain }, { replace: true });
     } catch (err) {
       const msg = handleError(err);
       if (msg) setError(msg);
     } finally { setLoading(false); }
+  }
+
+  async function runSingle(e: React.FormEvent) {
+    e.preventDefault();
+    performScan(domain);
+  }
+
+  // Auto-run when opened from a shared link (?domain=…)
+  useEffect(() => {
+    if (searchParams.get('domain') && !hasAutoRun.current) {
+      hasAutoRun.current = true;
+      performScan(initialDomain);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function runBulk(e: React.FormEvent) {
@@ -243,6 +268,7 @@ export default function DomainAudit() {
                 {loading ? t.auditing : t.analyze}
               </button>
             </div>
+            <p className="input-hint">{t.hintDomain}</p>
           </div>
           <button type="button" className="export-btn" style={{ marginBottom: '0.5rem' }} onClick={loadDemo}>
             {t.tryDemo}
@@ -286,7 +312,9 @@ export default function DomainAudit() {
                 <span aria-hidden="true">⚠</span> {t.demoLabel}
               </p>
             )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <button className="export-btn" onClick={copyLink}>{copied ? t.linkCopied : t.copyLink}</button>
+              <button className="export-btn" onClick={() => downloadJson(result, `domain-${domain}`)}>{t.exportJson}</button>
               <button className="export-btn" onClick={() => window.print()}>{t.exportPdf}</button>
             </div>
             <DomainResult result={result} t={t} />

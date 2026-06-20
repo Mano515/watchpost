@@ -70,6 +70,7 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
       key: 'header.hsts_subdomains',
       label: 'HSTS includes subdomains',
       passed: hsts.toLowerCase().includes('includesubdomains'),
+      informational: true, // often managed by hosting platform (Vercel, Netlify, Cloudflare)
     });
   }
 

@@ -1,30 +1,22 @@
 import { Link } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
-import { useHistory, type HistoryEntry } from '../hooks/useHistory';
 
-const MODULE_KEYS = ['headers', 'password', 'breach', 'domain', 'vuln'] as const;
+const MODULE_KEYS = ['site', 'password', 'breach', 'monitor'] as const;
 const MODULE_PATHS: Record<typeof MODULE_KEYS[number], string> = {
-  headers:  '/headers',
+  site:     '/site',
   password: '/password',
   breach:   '/breach',
-  domain:   '/domain',
-  vuln:     '/vuln',
+  monitor:  '/monitor',
 };
 const MODULE_ICONS: Record<typeof MODULE_KEYS[number], string> = {
-  headers:  '🛡️',
+  site:     '🔬',
   password: '🔑',
   breach:   '📧',
-  domain:   '🔍',
-  vuln:     '🔬',
-};
-const GRADE_COLOR: Record<string, string> = {
-  A: 'var(--grade-a)', B: 'var(--grade-b)', C: 'var(--grade-c)',
-  D: 'var(--grade-d)', F: 'var(--grade-f)',
+  monitor:  '⏰',
 };
 
 export default function Home() {
   const { t } = useT();
-  const { entries, clear } = useHistory();
 
   return (
     <main id="main" className="page">
@@ -33,34 +25,10 @@ export default function Home() {
         <p className="home-sub">{t.homeSub}</p>
       </header>
 
-      {entries.length > 0 && (
-        <section className="history-section" aria-label={t.recentScans}>
-          <div className="history-header">
-            <h2>{t.recentScans}</h2>
-            <button className="history-clear" onClick={clear}>{t.clearHistory}</button>
-          </div>
-          <ul className="history-list" role="list">
-            {entries.map((e) => (
-              <li key={e.id}>
-                <Link
-                  to={MODULE_PATHS[e.type]}
-                  state={{ input: e.input }}
-                  className="history-item"
-                  style={{ textDecoration: 'none' }}
-                >
-                  {e.grade && (
-                    <span className="h-grade" style={{ color: GRADE_COLOR[e.grade] ?? 'var(--text)' }}>
-                      {e.grade}
-                    </span>
-                  )}
-                  <span className="h-type">{t.historyTypes[e.type]}</span>
-                  <span className="h-input">{e.input}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <div className="home-intro" role="note">
+        <span className="home-intro__icon" aria-hidden="true">🔒</span>
+        <p>{t.homeIntro}</p>
+      </div>
 
       <nav aria-label={t.allTools}>
         <ul className="module-grid" role="list">
