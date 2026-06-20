@@ -15,63 +15,140 @@ const GRADE_COLOR: Record<string, string> = {
   D: 'var(--grade-d)', F: 'var(--grade-f)',
 };
 
-const SEVERITY_ORDER: VulnSeverity[] = ['high', 'medium', 'low', 'info'];
+const SEVERITY_ORDER: VulnSeverity[] = ['critical', 'high', 'medium', 'low', 'info'];
+
 const SEVERITY_COLOR: Record<VulnSeverity, string> = {
-  high: 'var(--err)', medium: 'var(--warn)', low: 'var(--accent)', info: 'var(--text-muted)',
+  critical: 'var(--critical)',
+  high:     'var(--err)',
+  medium:   'var(--warn)',
+  low:      'var(--accent)',
+  info:     'var(--text-muted)',
+};
+
+const SEVERITY_BORDER: Record<VulnSeverity, string> = {
+  critical: 'var(--critical-border)',
+  high:     'var(--err-border)',
+  medium:   'var(--warn-bg)',
+  low:      'color-mix(in srgb, var(--accent) 25%, transparent)',
+  info:     'var(--border)',
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function SubScore({ label, score, grade, error }: { label: string; score?: number; grade?: string; error?: string | null }) {
-  if (error) return (
-    <div className="site-sub-score site-sub-score--error">
-      <span className="site-sub-score__label">{label}</span>
-      <span className="site-sub-score__error">—</span>
-    </div>
-  );
+
+const Chevron = ({ open }: { open: boolean }) => (
+  <svg
+    style={{ width: '0.85rem', height: '0.85rem', flexShrink: 0, color: 'var(--text-muted)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}
+    viewBox="0 0 16 16" fill="none" aria-hidden="true"
+  >
+    <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+function SeverityPill({ sev, label }: { sev: VulnSeverity; label: string }) {
   return (
-    <div className="site-sub-score">
-      <span className="site-sub-score__label">{label}</span>
-      <span className="site-sub-score__grade" style={{ color: GRADE_COLOR[grade ?? 'F'] }}>{grade}</span>
-      <span className="site-sub-score__score">{score}/100</span>
-    </div>
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      width: '4rem', flexShrink: 0,
+      fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em',
+      color: SEVERITY_COLOR[sev],
+      border: `1px solid ${SEVERITY_BORDER[sev]}`,
+      borderRadius: '3px',
+      padding: '0.15rem 0',
+      lineHeight: 1,
+    }}>
+      {label}
+    </span>
   );
 }
 
 function VulnDetail({ findings, t }: { findings: VulnFinding[]; t: ReturnType<typeof useT>['t'] }) {
-  const grouped = SEVERITY_ORDER
-    .map((sev) => ({ sev, items: findings.filter((f) => f.severity === sev) }))
-    .filter((g) => g.items.length > 0);
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
+  const sorted = [...findings].sort((a, b) => {
+    if (a.passed !== b.passed) return a.passed ? 1 : -1;
+    return SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
+  });
 
   return (
-    <>
-      {grouped.map(({ sev, items }) => (
-        <section key={sev} style={{ marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: SEVERITY_COLOR[sev], marginBottom: '0.4rem' }}>
-            {t.vulnSeverity[sev]}
-          </h3>
-          <ul className="result-list" role="list">
-            {items.map((f, i) => {
-              const check = t.checks[f.key];
-              return (
-                <li key={i} className={`result-item ${f.passed ? 'result-item--pass' : 'result-item--fail'}`}>
-                  <span className={`result-item__icon ${f.passed ? 'result-item__icon--pass' : 'result-item__icon--fail'}`} aria-hidden="true">
-                    {f.passed ? '✓' : '✗'}
-                  </span>
-                  <div style={{ flex: 1 }}>
-                    <p className="result-item__label" style={{ margin: 0 }}>{check?.label ?? f.label}</p>
-                    {f.detail && <p style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{f.detail}</p>}
-                    {!f.passed && (check?.rec ?? f.recommendation) && (
-                      <p className="result-item__rec">{check?.rec ?? f.recommendation}</p>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
-    </>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* ── Full findings list ── */}
+      <ul className="result-list" role="list">
+        {sorted.map((f, i) => {
+          const check     = t.checks[f.key];
+          const label     = check?.label ?? f.label;
+          const rec       = check?.rec ?? f.recommendation;
+          const why       = check?.why;
+          const uid       = `${f.key}-${i}`;
+          const isOpen    = openKey === uid;
+          const canExpand = !f.passed && (rec || why || f.detail);
+
+          return (
+            <li
+              key={uid}
+              style={{
+                display: 'flex', flexDirection: 'column',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderLeft: `3px solid ${f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity]}`,
+                padding: '0.55rem 0.8rem',
+                gap: 0,
+              }}
+            >
+              {/* Row */}
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: canExpand ? 'pointer' : 'default' }}
+                onClick={() => canExpand && setOpenKey(isOpen ? null : uid)}
+                role={canExpand ? 'button' : undefined}
+                aria-expanded={canExpand ? isOpen : undefined}
+              >
+                <span aria-hidden="true" style={{
+                  flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.65rem', fontWeight: 700,
+                  background: f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity],
+                  color: f.passed ? '#0d1117' : '#fff',
+                }}>
+                  {f.passed ? '✓' : '✗'}
+                </span>
+                {f.passed
+                  ? <span style={{ width: '4rem', flexShrink: 0 }} aria-hidden="true" />
+                  : <SeverityPill sev={f.severity} label={t.vulnSeverity[f.severity]} />
+                }
+                <p style={{ margin: 0, flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{label}</p>
+                {canExpand && <Chevron open={isOpen} />}
+              </div>
+
+              {/* Expanded detail */}
+              {isOpen && (
+                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {f.detail && (
+                    <p style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', margin: 0 }}>{f.detail}</p>
+                  )}
+                  {rec && (
+                    <div>
+                      <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ok)', marginBottom: '0.3rem' }}>
+                        🔧 {t.howToFix}
+                      </p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{rec}</p>
+                    </div>
+                  )}
+                  {why && (
+                    <div>
+                      <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: SEVERITY_COLOR[f.severity], marginBottom: '0.3rem' }}>
+                        ⚠️ {t.attackScenario}
+                      </p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{why}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -308,20 +385,48 @@ export default function SiteAudit() {
             <hr className="divider" />
 
             {/* Overall score */}
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                 {t.siteOverallScore}
               </p>
               <ScoreBadge score={result.overallScore} grade={result.overallGrade} />
             </div>
 
-            {/* Sub-scores */}
-            <div className="site-sub-scores">
-              <SubScore label={t.modules.headers.title} score={result.headers?.score}          grade={result.headers?.grade}          error={result.headersError} />
-              <SubScore label={t.modules.vuln.title}    score={result.vuln?.score}             grade={result.vuln?.grade}             error={result.vulnError} />
-              <SubScore label={t.sslTitle}              score={da?.ssl?.score}                 grade={da?.ssl?.grade}                 error={result.domainError} />
-              <SubScore label={t.emailSecTitle}         score={da?.dns?.emailSecurity?.score?.score} grade={da?.dns?.emailSecurity?.score?.grade} error={result.domainError} />
-            </div>
+            {/* Critical findings banner — all sections */}
+            {(() => {
+              const criticals = [
+                ...(result.vuln?.findings ?? []).filter((f) => !f.passed && f.severity === 'critical'),
+                ...(result.headers?.details ?? []).filter((d) => !d.passed && d.severity === 'critical'),
+              ];
+              if (criticals.length === 0) return null;
+              return (
+                <div style={{
+                  background: 'var(--critical-bg)',
+                  border: '1px solid var(--critical-border)',
+                  borderLeft: '3px solid var(--critical)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.75rem 1rem',
+                  marginBottom: '1.25rem',
+                }}>
+                  <p style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--critical)', marginBottom: '0.5rem' }}>
+                    ⛔ {criticals.length} {criticals.length === 1 ? 'vulnérabilité critique' : 'vulnérabilités critiques'} — à corriger immédiatement
+                  </p>
+                  <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    {criticals.map((f, i) => {
+                      const label = ('key' in f && f.key) ? (t.checks[f.key]?.label ?? f.label) : f.label;
+                      const detail = 'detail' in f ? f.detail : undefined;
+                      return (
+                        <li key={i} style={{ fontSize: '0.82rem', color: 'var(--text-2)', display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <span style={{ color: 'var(--critical)', fontSize: '0.7rem', flexShrink: 0 }}>▸</span>
+                          <span>{label}</span>
+                          {detail && <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>— {detail}</span>}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })()}
 
             {/* Export */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -335,14 +440,22 @@ export default function SiteAudit() {
             </p>
 
             {/* Expandable sections */}
-            {sections.map(({ key, label, content }) => (
+            {sections.map(({ key, label, grade, score, error, content }) => (
               <div key={key} className="site-section">
                 <button
                   className="site-section__toggle"
                   aria-expanded={openSection === key}
                   onClick={() => toggle(key)}
                 >
-                  <span>{label}</span>
+                  <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
+                  {error ? (
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginRight: '0.5rem' }}>—</span>
+                  ) : grade ? (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginRight: '0.5rem' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{score}/100</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: GRADE_COLOR[grade] }}>{grade}</span>
+                    </span>
+                  ) : null}
                   <svg className={`explainer-summary__chevron${openSection === key ? ' explainer-summary__chevron--open' : ''}`} viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>

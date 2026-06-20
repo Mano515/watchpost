@@ -22,6 +22,9 @@
   --err:       #f85149;
   --err-bg:    #f8514914;
   --err-border:#f8514933;
+  --critical:  #ff6b6b;
+  --critical-bg:#ff6b6b12;
+  --critical-border:#ff6b6b40;
 
   --grade-a: #3fb950;
   --grade-b: #79c0ff;
@@ -326,42 +329,43 @@ a:hover { text-decoration-thickness: 2px; }
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
+
+/* Base card — neutral, no color */
 .result-item {
   display: flex;
-  gap: 0.85rem;
-  padding: 0.85rem 1rem;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
   border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  align-items: center;
+  transition: background var(--transition);
 }
-.result-item--pass {
-  background: var(--ok-bg);
-  border-color: var(--ok-border);
-}
-.result-item--fail {
-  background: var(--err-bg);
-  border-color: var(--err-border);
-}
+.result-item--pass  { border-left-color: var(--ok); }
+.result-item--fail  { border-left-color: var(--err); }
+.result-item--info  { border-left-color: var(--text-muted); opacity: 0.75; }
+
+/* Small icon circle — pass / fail / info */
 .result-item__icon {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  margin-top: 1px;
 }
-.result-item__icon--pass { background: var(--ok); color: #0d1117; }
-.result-item__icon--fail { background: var(--err); color: #fff; }
-.result-item--info { opacity: 0.7; }
-.result-item--info .result-item__icon { background: var(--text-muted); color: var(--bg); font-size: 0.8rem; }
-.result-item__label { font-weight: 500; font-size: 0.925rem; }
-.result-item__rec { font-size: 0.825rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.5; }
+.result-item__icon--pass { background: var(--ok);         color: #0d1117; }
+.result-item__icon--fail { background: var(--err);        color: #fff; }
+.result-item--info .result-item__icon { background: var(--text-muted); color: var(--bg); font-size: 0.65rem; }
+
+.result-item__label { font-weight: 500; font-size: 0.9rem; margin: 0; }
+.result-item__rec   { font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.5; }
 
 /* ── Info grid (SSL / Password meta) ── */
 .info-grid {

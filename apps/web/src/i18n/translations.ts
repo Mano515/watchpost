@@ -185,9 +185,13 @@ export interface Translations {
   bulkAuditing:     string;
   bulkResults:      (n: number) => string;
 
-  vulnSeverity: Record<'high' | 'medium' | 'low' | 'info', string>;
+  vulnSeverity: Record<'critical' | 'high' | 'medium' | 'low' | 'info', string>;
   vulnFindings: (n: number) => string;
   vulnInfoNote: string;
+
+  // Vuln detail expand labels
+  howToFix:      string;
+  attackScenario: string;
 
   // Check keys → translated label + rec + explanation
   checks: Record<string, {
@@ -416,9 +420,11 @@ const en: Translations = {
   bulkAuditing:    'Auditing…',
   bulkResults:     (n) => `${n} domain${n > 1 ? 's' : ''} audited`,
 
-  vulnSeverity: { high: 'High', medium: 'Medium', low: 'Low', info: 'Info' },
+  vulnSeverity: { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low', info: 'Info' },
   vulnFindings: (n) => `${n} finding${n > 1 ? 's' : ''}`,
   vulnInfoNote: 'Info findings do not affect the score.',
+  howToFix:      'How to fix',
+  attackScenario: 'Attack scenario & impact',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Add a CSP header to restrict which scripts and resources can load.', why: 'Prevents attackers from injecting malicious scripts into your pages (XSS).' },
@@ -741,9 +747,11 @@ const fr: Translations = {
   bulkAuditing:    'Audit en cours…',
   bulkResults:     (n) => `${n} domaine${n > 1 ? 's' : ''} audité${n > 1 ? 's' : ''}`,
 
-  vulnSeverity: { high: 'Élevée', medium: 'Moyenne', low: 'Faible', info: 'Info' },
+  vulnSeverity: { critical: 'Critique', high: 'Élevée', medium: 'Moyenne', low: 'Faible', info: 'Info' },
   vulnFindings: (n) => `${n} résultat${n > 1 ? 's' : ''}`,
   vulnInfoNote: 'Les éléments « Info » n\'affectent pas le score.',
+  howToFix:      'Comment corriger',
+  attackScenario: 'Scénario d\'attaque & impacts',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Ajoutez un en-tête CSP pour restreindre les scripts et ressources autorisés.', why: 'Empêche les attaquants d\'injecter des scripts malveillants dans vos pages (XSS).' },
@@ -1066,9 +1074,11 @@ const es: Translations = {
   bulkAuditing:    'Auditando…',
   bulkResults:     (n) => `${n} dominio${n > 1 ? 's' : ''} auditado${n > 1 ? 's' : ''}`,
 
-  vulnSeverity: { high: 'Alta', medium: 'Media', low: 'Baja', info: 'Info' },
+  vulnSeverity: { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja', info: 'Info' },
   vulnFindings: (n) => `${n} hallazgo${n > 1 ? 's' : ''}`,
   vulnInfoNote: 'Los elementos "Info" no afectan la puntuación.',
+  howToFix:      'Cómo corregirlo',
+  attackScenario: 'Escenario de ataque e impactos',
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Añade una cabecera CSP para restringir los scripts y recursos permitidos.', why: 'Evita que los atacantes inyecten scripts maliciosos en tus páginas (XSS).' },

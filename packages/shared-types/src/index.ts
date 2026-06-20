@@ -10,6 +10,7 @@ export interface ScoreDetail {
   key?: string;   // i18n key — frontend looks up translated label/rec/explanation
   label: string;  // English fallback
   passed: boolean;
+  severity?: VulnSeverity;
   recommendation?: string;
   informational?: boolean; // if true: shown in UI but excluded from score calculation
 }
@@ -72,7 +73,7 @@ export interface SslResult extends SecurityScore {
   signatureAlgorithm: string;
 }
 
-export type VulnSeverity = 'high' | 'medium' | 'low' | 'info';
+export type VulnSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
 export interface VulnFinding {
   key: string;

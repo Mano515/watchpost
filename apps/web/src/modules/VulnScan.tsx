@@ -12,13 +12,14 @@ import { demoVuln } from '../demo/mockData';
 import type { VulnScanResult, VulnFinding, VulnSeverity } from '@watchpost/shared-types';
 
 const SEVERITY_COLOR: Record<VulnSeverity, string> = {
-  high:   'var(--err)',
-  medium: 'var(--warn)',
-  low:    'var(--accent)',
-  info:   'var(--text-muted)',
+  critical: 'var(--critical)',
+  high:     'var(--err)',
+  medium:   'var(--warn)',
+  low:      'var(--accent)',
+  info:     'var(--text-muted)',
 };
 
-const SEVERITY_ORDER: VulnSeverity[] = ['high', 'medium', 'low', 'info'];
+const SEVERITY_ORDER: VulnSeverity[] = ['critical', 'high', 'medium', 'low', 'info'];
 
 function FindingRow({ finding, t }: { finding: VulnFinding; t: ReturnType<typeof useT>['t'] }) {
   const [open, setOpen] = useState(false);

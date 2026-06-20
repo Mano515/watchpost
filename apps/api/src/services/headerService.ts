@@ -37,18 +37,18 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
   const details: ScoreDetail[] = [];
 
   // ── Basic presence checks ─────────────────────────────────────────────────
-  const basicHeaders: Array<{ name: string; key: string }> = [
-    { name: 'content-security-policy',   key: 'header.csp'  },
-    { name: 'x-frame-options',           key: 'header.xfo'  },
-    { name: 'x-content-type-options',    key: 'header.xcto' },
-    { name: 'referrer-policy',           key: 'header.rp'   },
-    { name: 'permissions-policy',        key: 'header.pp'   },
+  const basicHeaders: Array<{ name: string; key: string; severity: ScoreDetail['severity'] }> = [
+    { name: 'content-security-policy', key: 'header.csp',  severity: 'high'   },
+    { name: 'x-frame-options',         key: 'header.xfo',  severity: 'high'   },
+    { name: 'x-content-type-options',  key: 'header.xcto', severity: 'medium' },
+    { name: 'referrer-policy',         key: 'header.rp',   severity: 'low'    },
+    { name: 'permissions-policy',      key: 'header.pp',   severity: 'low'    },
   ];
 
   for (const h of basicHeaders) {
     const value = res.headers.get(h.name);
     headerMap[h.name] = value;
-    details.push({ key: h.key, label: h.name, passed: value !== null });
+    details.push({ key: h.key, label: h.name, passed: value !== null, severity: h.severity });
   }
 
   // ── HSTS quality ──────────────────────────────────────────────────────────
@@ -58,6 +58,7 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
     key: 'header.hsts',
     label: 'Strict-Transport-Security present',
     passed: hsts !== null,
+    severity: 'high',
   });
   if (hsts) {
     const maxAge = parseHstsMaxAge(hsts);
@@ -65,12 +66,14 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
       key: 'header.hsts_age',
       label: `HSTS max-age ≥ 6 months (${SIX_MONTHS_SEC}s)`,
       passed: maxAge >= SIX_MONTHS_SEC,
+      severity: 'medium',
     });
     details.push({
       key: 'header.hsts_subdomains',
       label: 'HSTS includes subdomains',
       passed: hsts.toLowerCase().includes('includesubdomains'),
-      informational: true, // often managed by hosting platform (Vercel, Netlify, Cloudflare)
+      severity: 'info',
+      informational: true,
     });
   }
 
@@ -80,8 +83,8 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
   details.push({
     key: 'header.no_xxss',
     label: 'X-XSS-Protection absent or disabled',
-    // present and not "0" is BAD — modern browsers ignore or misuse it
     passed: !xxss || xxss.trim() === '0',
+    severity: 'medium',
   });
 
   // ── HTTPS redirect ────────────────────────────────────────────────────────
@@ -89,6 +92,7 @@ export async function scanHeaders(url: string): Promise<HeaderScanResult> {
     key: 'header.https_redirect',
     label: 'HTTP → HTTPS redirect',
     passed: httpsRedirect,
+    severity: 'high',
   });
 
   const result: HeaderScanResult = { url, headers: headerMap, ...buildScore(details) };
