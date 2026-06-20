@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build --workspace=@watchpost/shared-types && cd apps/web && npx vite build",
+  "buildCommand": "npm run build --workspace=@watchpost/shared-types && npm exec --workspace=@watchpost/web -- vite build",
   "outputDirectory": "apps/web/dist",
   "installCommand": "npm ci",
   "rewrites": [
