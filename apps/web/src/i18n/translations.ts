@@ -190,8 +190,12 @@ export interface Translations {
   vulnInfoNote: string;
 
   // Vuln detail expand labels
-  howToFix:      string;
+  howToFix:       string;
   attackScenario: string;
+
+  // Severity legend
+  severityLegendTitle: string;
+  severityLegend: Record<'critical' | 'high' | 'medium' | 'low' | 'info', string>;
 
   // Check keys → translated label + rec + explanation
   checks: Record<string, {
@@ -425,6 +429,14 @@ const en: Translations = {
   vulnInfoNote: 'Info findings do not affect the score.',
   howToFix:      'How to fix',
   attackScenario: 'Attack scenario & impact',
+  severityLegendTitle: 'How is criticality determined?',
+  severityLegend: {
+    critical: 'Direct exploitation or credential exposure — immediate risk to the infrastructure or data (SQL injection, exposed .env, open database port…)',
+    high:     'Major attack surface without confirmed exploitation — one step away from a breach (no HTTPS, no CSP, clickjacking…)',
+    medium:   'Bad practice exploitable in combination with other weaknesses (misconfigured cookies, weak CSP, CORS issues…)',
+    low:      'Defence-in-depth hardening — limited impact alone (missing Referrer-Policy, Permissions-Policy…)',
+    info:     'Informational — does not affect the score, often managed by hosting platforms',
+  },
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Add a CSP header to restrict which scripts and resources can load.', why: 'Prevents attackers from injecting malicious scripts into your pages (XSS).' },
@@ -752,6 +764,14 @@ const fr: Translations = {
   vulnInfoNote: 'Les éléments « Info » n\'affectent pas le score.',
   howToFix:      'Comment corriger',
   attackScenario: 'Scénario d\'attaque & impacts',
+  severityLegendTitle: 'Comment la criticité est-elle déterminée ?',
+  severityLegend: {
+    critical: 'Exploitation directe ou exposition de credentials — risque immédiat pour l\'infrastructure ou les données (injection SQL, .env exposé, port BDD ouvert…)',
+    high:     'Surface d\'attaque majeure sans exploitation confirmée — à une étape d\'une compromission (pas de HTTPS, pas de CSP, clickjacking…)',
+    medium:   'Mauvaise pratique exploitable en combinaison avec d\'autres failles (cookies mal configurés, CSP faible, problèmes CORS…)',
+    low:      'Durcissement en profondeur — impact limité seul (Referrer-Policy, Permissions-Policy absents…)',
+    info:     'Informatif — n\'affecte pas le score, souvent géré par les plateformes d\'hébergement',
+  },
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Ajoutez un en-tête CSP pour restreindre les scripts et ressources autorisés.', why: 'Empêche les attaquants d\'injecter des scripts malveillants dans vos pages (XSS).' },
@@ -1079,6 +1099,14 @@ const es: Translations = {
   vulnInfoNote: 'Los elementos "Info" no afectan la puntuación.',
   howToFix:      'Cómo corregirlo',
   attackScenario: 'Escenario de ataque e impactos',
+  severityLegendTitle: '¿Cómo se determina la criticidad?',
+  severityLegend: {
+    critical: 'Explotación directa o exposición de credenciales — riesgo inmediato para la infraestructura o los datos (inyección SQL, .env expuesto, puerto de BD abierto…)',
+    high:     'Gran superficie de ataque sin explotación confirmada — a un paso de una brecha (sin HTTPS, sin CSP, clickjacking…)',
+    medium:   'Mala práctica explotable en combinación con otras debilidades (cookies mal configuradas, CSP débil, problemas CORS…)',
+    low:      'Endurecimiento en profundidad — impacto limitado solo (Referrer-Policy, Permissions-Policy ausentes…)',
+    info:     'Informativo — no afecta la puntuación, a menudo gestionado por plataformas de alojamiento',
+  },
 
   checks: {
     'header.csp':  { label: 'Content-Security-Policy', rec: 'Añade una cabecera CSP para restringir los scripts y recursos permitidos.', why: 'Evita que los atacantes inyecten scripts maliciosos en tus páginas (XSS).' },

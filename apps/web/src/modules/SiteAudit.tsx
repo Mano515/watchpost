@@ -10,6 +10,50 @@ import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import type { SiteAuditResult, VulnFinding, VulnSeverity, EmailSecurityResult } from '@watchpost/shared-types';
 
+function SeverityLegend({ t }: { t: ReturnType<typeof useT>['t'] }) {
+  const [open, setOpen] = useState(false);
+  const levels: VulnSeverity[] = ['critical', 'high', 'medium', 'low', 'info'];
+  return (
+    <div style={{ marginBottom: '1.25rem' }}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '0.4rem',
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--text-muted)', fontSize: '0.78rem', padding: 0,
+        }}
+        aria-expanded={open}
+      >
+        <svg style={{ width: '0.8rem', height: '0.8rem', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        ℹ️ {t.severityLegendTitle}
+      </button>
+      {open && (
+        <ul style={{ listStyle: 'none', marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          {levels.map((sev) => (
+            <li key={sev} style={{ display: 'flex', gap: '0.75rem', alignItems: 'baseline' }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '4rem', flexShrink: 0,
+                fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em',
+                color: SEVERITY_COLOR[sev],
+                border: `1px solid ${SEVERITY_BORDER[sev]}`,
+                borderRadius: '3px', padding: '0.15rem 0', lineHeight: 1,
+              }}>
+                {t.vulnSeverity[sev]}
+              </span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-2)', lineHeight: 1.5 }}>
+                {t.severityLegend[sev]}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 const GRADE_COLOR: Record<string, string> = {
   A: 'var(--grade-a)', B: 'var(--grade-b)', C: 'var(--grade-c)',
   D: 'var(--grade-d)', F: 'var(--grade-f)',
@@ -427,6 +471,9 @@ export default function SiteAudit() {
                 </div>
               );
             })()}
+
+            {/* Severity legend */}
+            <SeverityLegend t={t} />
 
             {/* Export */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
