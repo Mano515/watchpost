@@ -190,6 +190,18 @@ async function checkDnssec(domain: string): Promise<boolean> {
   }
 }
 
+// Hosting platforms that control their own DNS — SPF/DMARC/CAA/DNSSEC are
+// managed at the platform level and cannot be configured by the site owner.
+const MANAGED_DNS_SUFFIXES = [
+  '.vercel.app', '.railway.app', '.netlify.app', '.github.io',
+  '.herokuapp.com', '.azurewebsites.net', '.pages.dev', '.fly.dev',
+  '.onrender.com', '.up.railway.app',
+];
+
+function isManagedDomain(domain: string): boolean {
+  return MANAGED_DNS_SUFFIXES.some((s) => domain.endsWith(s));
+}
+
 async function resolveEmailSecurity(domain: string, txtRecords: string[]): Promise<EmailSecurityResult> {
   // SPF is stored as a TXT record directly on the domain
   const spfRecord = txtRecords.find((r) => r.startsWith('v=spf1')) ?? null;
@@ -213,38 +225,46 @@ async function resolveEmailSecurity(domain: string, txtRecords: string[]): Promi
 
   const dnssec = dnssecResult.status === 'fulfilled' ? dnssecResult.value as boolean : false;
 
+  // On managed hosting platforms (Vercel, Netlify, Railway…) the DNS is controlled
+  // by the platform — mark these checks informational so they don't affect the score.
+  const managed = isManagedDomain(domain);
+
   const details: ScoreDetail[] = [
     {
       key: 'email.spf_present',
       label: 'SPF record present',
       passed: spfRecord !== null,
+      informational: managed,
     },
     {
       key: 'email.spf_strict',
       label: 'SPF policy is strict (not +all)',
-      // '+all' or missing 'all' means any server can send as this domain
       passed: spfPolicy !== null && spfPolicy !== 'pass' && spfPolicy !== 'all',
+      informational: managed,
     },
     {
       key: 'email.dmarc_present',
       label: 'DMARC record present',
       passed: dmarcRecord !== null,
+      informational: managed,
     },
     {
       key: 'email.dmarc_policy',
       label: 'DMARC policy is quarantine or reject',
-      // 'none' is monitoring only — it does not prevent phishing emails from reaching inboxes
       passed: dmarcPolicy === 'quarantine' || dmarcPolicy === 'reject',
+      informational: managed,
     },
     {
       key: 'email.caa',
       label: 'CAA records restrict certificate issuance',
       passed: caaList.length > 0,
+      informational: managed,
     },
     {
       key: 'email.dnssec',
       label: 'DNSSEC enabled',
       passed: dnssec,
+      informational: managed,
     },
   ];
 
