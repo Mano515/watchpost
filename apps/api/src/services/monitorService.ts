@@ -1,54 +1,78 @@
-import { promises as fs } from 'fs';
+import Database from 'better-sqlite3';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as nodemailer from 'nodemailer';
 import { MonitorEntry, MonitorHistoryPoint, Grade } from '@watchpost/shared-types';
 import { auditSite } from './siteAuditService';
 
-const DATA_DIR  = path.join(__dirname, '../../data');
-const DATA_FILE = path.join(DATA_DIR, 'monitors.json');
+const DATA_DIR = process.env['DATA_DIR'] ?? path.join(__dirname, '../../data');
+fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const db = new Database(path.join(DATA_DIR, 'watchpost.db'));
+db.pragma('journal_mode = WAL');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS monitors (
+    id                     TEXT PRIMARY KEY,
+    domain                 TEXT NOT NULL,
+    threshold              INTEGER NOT NULL DEFAULT 80,
+    frequency              TEXT NOT NULL DEFAULT 'daily',
+    webhook                TEXT,
+    email                  TEXT,
+    created_at             TEXT NOT NULL,
+    last_score             INTEGER,
+    last_grade             TEXT,
+    last_scanned_at        TEXT,
+    last_new_findings      INTEGER DEFAULT 0,
+    last_resolved_findings INTEGER DEFAULT 0,
+    last_failed_keys       TEXT DEFAULT '[]',
+    history                TEXT DEFAULT '[]'
+  )
+`);
+
 const MAX_HISTORY = 30;
 
-// ── Persistence ───────────────────────────────────────────────────────────────
+// ── Row mapping ───────────────────────────────────────────────────────────────
 
-async function readMonitors(): Promise<MonitorEntry[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, 'utf-8');
-    return JSON.parse(raw) as MonitorEntry[];
-  } catch {
-    return [];
-  }
-}
+type Row = Record<string, unknown>;
 
-async function writeMonitors(monitors: MonitorEntry[]): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, JSON.stringify(monitors, null, 2), 'utf-8');
+function rowToEntry(row: Row): MonitorEntry {
+  return {
+    id:                   row['id'] as string,
+    domain:               row['domain'] as string,
+    threshold:            row['threshold'] as number,
+    frequency:            row['frequency'] as 'daily' | 'weekly',
+    webhook:              (row['webhook'] as string | null) ?? undefined,
+    email:                (row['email'] as string | null) ?? undefined,
+    createdAt:            row['created_at'] as string,
+    lastScore:            (row['last_score'] as number | null) ?? undefined,
+    lastGrade:            (row['last_grade'] as Grade | null) ?? undefined,
+    lastScannedAt:        (row['last_scanned_at'] as string | null) ?? undefined,
+    lastNewFindings:      (row['last_new_findings'] as number | null) ?? undefined,
+    lastResolvedFindings: (row['last_resolved_findings'] as number | null) ?? undefined,
+    _lastFailedKeys:      JSON.parse(row['last_failed_keys'] as string ?? '[]') as string[],
+    history:              JSON.parse(row['history'] as string ?? '[]') as MonitorHistoryPoint[],
+  };
 }
 
 // ── CRUD ─────────────────────────────────────────────────────────────────────
 
-export async function listMonitors(): Promise<MonitorEntry[]> {
-  return readMonitors();
+export function listMonitors(): Promise<MonitorEntry[]> {
+  const rows = db.prepare('SELECT * FROM monitors ORDER BY created_at DESC').all() as Row[];
+  return Promise.resolve(rows.map(rowToEntry));
 }
 
-export async function addMonitor(data: Omit<MonitorEntry, 'id' | 'createdAt' | 'history'>): Promise<MonitorEntry> {
-  const monitors = await readMonitors();
-  const entry: MonitorEntry = {
-    ...data,
-    id:        Math.random().toString(36).slice(2, 10),
-    createdAt: new Date().toISOString(),
-    history:   [],
-  };
-  monitors.push(entry);
-  await writeMonitors(monitors);
-  return entry;
+export function addMonitor(data: Omit<MonitorEntry, 'id' | 'createdAt' | 'history'>): Promise<MonitorEntry> {
+  const id        = Math.random().toString(36).slice(2, 10);
+  const createdAt = new Date().toISOString();
+  db.prepare(
+    'INSERT INTO monitors (id, domain, threshold, frequency, webhook, email, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  ).run(id, data.domain, data.threshold, data.frequency, data.webhook ?? null, data.email ?? null, createdAt);
+  return Promise.resolve({ ...data, id, createdAt, history: [] });
 }
 
-export async function removeMonitor(id: string): Promise<boolean> {
-  const monitors = await readMonitors();
-  const filtered = monitors.filter((m) => m.id !== id);
-  if (filtered.length === monitors.length) return false;
-  await writeMonitors(filtered);
-  return true;
+export function removeMonitor(id: string): Promise<boolean> {
+  const result = db.prepare('DELETE FROM monitors WHERE id = ?').run(id);
+  return Promise.resolve(result.changes > 0);
 }
 
 // ── Email transport (optional — requires SMTP env vars) ────────────────────────
@@ -83,13 +107,12 @@ async function sendAlerts(
     `Current score: ${currentScore}/100 (${currentGrade})`,
     prevScore !== undefined ? `Previous score: ${prevScore}/100` : '',
     `Threshold: ${monitor.threshold}`,
-    newFindings     > 0 ? `⚠ ${newFindings} new issue(s) appeared` : '',
+    newFindings      > 0 ? `⚠ ${newFindings} new issue(s) appeared` : '',
     resolvedFindings > 0 ? `✓ ${resolvedFindings} issue(s) resolved` : '',
     '',
     `Scan time: ${new Date().toISOString()}`,
   ].filter(Boolean).join('\n');
 
-  // Webhook alert
   if (monitor.webhook) {
     try {
       await fetch(monitor.webhook, {
@@ -110,7 +133,6 @@ async function sendAlerts(
     }
   }
 
-  // Email alert
   if (monitor.email) {
     const transport = createTransport();
     if (transport) {
@@ -126,7 +148,7 @@ async function sendAlerts(
         console.error(`[monitor] Email failed for ${monitor.domain}:`, err);
       }
     } else {
-      console.warn(`[monitor] Email configured for ${monitor.domain} but no SMTP env vars set (SMTP_HOST, SMTP_USER, SMTP_PASS).`);
+      console.warn(`[monitor] Email configured for ${monitor.domain} but SMTP_HOST env var is not set.`);
     }
   }
 }
@@ -139,19 +161,19 @@ function computeDiff(
 ): { newFindings: number; resolvedFindings: number } {
   const prevFailed    = new Set(prevFindingKeys);
   const currentFailed = new Set(currentFindingKeys);
-  const newFindings      = [...currentFailed].filter((k) => !prevFailed.has(k)).length;
-  const resolvedFindings = [...prevFailed].filter((k) => !currentFailed.has(k)).length;
-  return { newFindings, resolvedFindings };
+  return {
+    newFindings:      [...currentFailed].filter((k) => !prevFailed.has(k)).length,
+    resolvedFindings: [...prevFailed].filter((k) => !currentFailed.has(k)).length,
+  };
 }
 
 // ── Scan a single monitor ────────────────────────────────────────────────────
 
 export async function runMonitor(id: string): Promise<MonitorEntry | null> {
-  const monitors = await readMonitors();
-  const idx = monitors.findIndex((m) => m.id === id);
-  if (idx === -1) return null;
+  const row = db.prepare('SELECT * FROM monitors WHERE id = ?').get(id) as Row | undefined;
+  if (!row) return null;
 
-  const monitor = monitors[idx];
+  const monitor = rowToEntry(row);
   console.log(`[monitor] Scanning ${monitor.domain}…`);
 
   try {
@@ -159,39 +181,48 @@ export async function runMonitor(id: string): Promise<MonitorEntry | null> {
     const newScore = audit.overallScore;
     const newGrade = audit.overallGrade;
 
-    // Collect failed finding keys for diff
     const currentFailedKeys = [
       ...(audit.vuln?.findings.filter((f) => !f.passed).map((f) => f.key) ?? []),
       ...(audit.headers?.details.filter((d) => !d.passed && !d.informational).map((d) => d.key ?? d.label) ?? []),
     ];
 
-    // Compute diff against previous scan
     const prevFailedKeys = monitor._lastFailedKeys ?? [];
     const { newFindings, resolvedFindings } = computeDiff(prevFailedKeys, currentFailedKeys);
 
-    // Append to history (cap at MAX_HISTORY)
-    const historyPoint: MonitorHistoryPoint = { score: newScore, grade: newGrade, scannedAt: new Date().toISOString() };
+    const historyPoint: MonitorHistoryPoint = {
+      score: newScore, grade: newGrade, scannedAt: new Date().toISOString(),
+    };
     const history = [...(monitor.history ?? []), historyPoint].slice(-MAX_HISTORY);
 
-    monitors[idx] = {
+    db.prepare(`
+      UPDATE monitors
+      SET last_score = ?, last_grade = ?, last_scanned_at = ?,
+          last_new_findings = ?, last_resolved_findings = ?,
+          last_failed_keys = ?, history = ?
+      WHERE id = ?
+    `).run(
+      newScore, newGrade, historyPoint.scannedAt,
+      newFindings, resolvedFindings,
+      JSON.stringify(currentFailedKeys), JSON.stringify(history),
+      id,
+    );
+
+    const updated: MonitorEntry = {
       ...monitor,
-      lastScore:          newScore,
-      lastGrade:          newGrade,
-      lastScannedAt:      historyPoint.scannedAt,
+      lastScore:           newScore,
+      lastGrade:           newGrade,
+      lastScannedAt:       historyPoint.scannedAt,
       history,
-      lastNewFindings:     newFindings,
+      lastNewFindings:      newFindings,
       lastResolvedFindings: resolvedFindings,
       _lastFailedKeys:      currentFailedKeys,
     };
 
-    await writeMonitors(monitors);
-
-    // Alert if score dropped below threshold
     if (newScore < monitor.threshold) {
-      await sendAlerts(monitors[idx], monitor.lastScore, newScore, newGrade, newFindings, resolvedFindings);
+      await sendAlerts(updated, monitor.lastScore, newScore, newGrade, newFindings, resolvedFindings);
     }
 
-    return monitors[idx];
+    return updated;
   } catch (err) {
     console.error(`[monitor] Scan failed for ${monitor.domain}:`, err);
     return monitor;
@@ -207,12 +238,11 @@ const FREQUENCY_MS: Record<MonitorEntry['frequency'], number> = {
 
 function isDue(monitor: MonitorEntry): boolean {
   if (!monitor.lastScannedAt) return true;
-  const elapsed = Date.now() - new Date(monitor.lastScannedAt).getTime();
-  return elapsed >= FREQUENCY_MS[monitor.frequency];
+  return Date.now() - new Date(monitor.lastScannedAt).getTime() >= FREQUENCY_MS[monitor.frequency];
 }
 
 async function checkDueMonitors(): Promise<void> {
-  const monitors = await readMonitors();
+  const monitors = await listMonitors();
   await Promise.all(monitors.filter(isDue).map((m) => runMonitor(m.id)));
 }
 

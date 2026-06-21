@@ -4,6 +4,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { useT } from './i18n/LanguageContext';
 import { useTheme } from './hooks/useTheme';
 import { IconShield } from './components/Icons';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import Home from './modules/Home';
 import PasswordCheck from './modules/PasswordCheck';
 import BreachCheck from './modules/BreachCheck';
@@ -27,6 +28,7 @@ export default function App() {
           <LanguageSwitcher />
         </div>
       </header>
+      <ErrorBoundary>
       <Routes>
         <Route path="/"         element={<Home />} />
         <Route path="/site"     element={<SiteAudit />} />
@@ -38,6 +40,7 @@ export default function App() {
         <Route path="/monitor"  element={<Monitor />} />
         <Route path="*"         element={<NotFound />} />
       </Routes>
+      </ErrorBoundary>
     </>
   );
 }

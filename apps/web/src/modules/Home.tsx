@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom';
-import type { CSSProperties, FC } from 'react';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import type { CSSProperties, FC, FormEvent } from 'react';
 import { useT } from '../i18n/LanguageContext';
 import { IconShield, IconLock, IconMail, IconActivity, IconArrowRight, type IconProps } from '../components/Icons';
 
@@ -18,6 +19,16 @@ const MODULES: Array<{
 
 export default function Home() {
   const { t } = useT();
+  const navigate = useNavigate();
+  const [domain, setDomain] = useState('');
+
+  function handleQuickScan(e: FormEvent) {
+    e.preventDefault();
+    const raw = domain.trim();
+    if (!raw) return;
+    const cleaned = raw.replace(/^https?:\/\//i, '').split('/')[0].split('?')[0];
+    navigate(`/site?domain=${encodeURIComponent(cleaned)}`);
+  }
 
   return (
     <main id="main" className="page home-page">
@@ -27,6 +38,22 @@ export default function Home() {
         </div>
         <h1 className="home-hero__title">{t.homeTitle}</h1>
         <p className="home-hero__sub">{t.homeSub}</p>
+
+        <form className="quick-scan" onSubmit={handleQuickScan}>
+          <input
+            className="input quick-scan__input"
+            type="text"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            placeholder={t.quickScanPlaceholder}
+            aria-label={t.quickScanPlaceholder}
+            spellCheck={false}
+            autoCapitalize="none"
+          />
+          <button type="submit" className="btn btn-primary quick-scan__btn">
+            {t.quickScanCta}
+          </button>
+        </form>
       </header>
 
       <nav aria-label={t.allTools}>
