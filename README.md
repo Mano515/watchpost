@@ -2,8 +2,6 @@
 
 Centralised security audit suite — 4 tools, one interface.
 
-![Watchpost home](docs/screenshot-home.png)
-
 ## Tools
 
 | Module | Input | What it does |
@@ -74,8 +72,8 @@ Webhook alerts (Slack, Discord, ntfy.sh, any JSON POST endpoint) work out of the
 
 - **Password module**: the password never leaves your server. Only the first 5 characters of its SHA-1 hash are sent to [HaveIBeenPwned](https://haveibeenpwned.com/API/v3#SearchingPwnedPasswordsByRange) (k-anonymity).
 - **Email module**: addresses are sent to [XposedOrNot](https://xposedornot.com/) for breach lookup. Nothing is persisted by Watchpost.
-- **Monitor module**: scan results are stored locally in `apps/api/data/monitors.json`.
-- The API has no database and no user sessions.
+- **Monitor module**: scan results and monitor entries are stored in a local SQLite database (`DATA_DIR/watchpost.db`). No external service involved.
+- The API has no user sessions or authentication.
 
 ## Stack
 
@@ -89,5 +87,25 @@ Webhook alerts (Slack, Discord, ntfy.sh, any JSON POST endpoint) work out of the
 
 | Part | Target | Notes |
 |---|---|---|
-| Frontend | Vercel | Update `VITE_API_URL` env var to point to your API |
-| API | Railway / Render / VPS | Set SMTP env vars for email alerts |
+| Frontend | Vercel | Set `VITE_API_URL` to your Railway API URL |
+| API | Railway | Set `CORS_ORIGIN`, `DATA_DIR`, and optionally SMTP vars |
+
+### Required environment variables
+
+**Vercel (frontend)**
+
+| Variable | Example value |
+|---|---|
+| `VITE_API_URL` | `https://watchpostapi-production.up.railway.app` |
+
+**Railway (API)**
+
+| Variable | Example value | Notes |
+|---|---|---|
+| `CORS_ORIGIN` | `https://watchpost.vercel.app` | Your Vercel URL. Comma-separated for multiple. |
+| `DATA_DIR` | `/data` | Mount path of your Railway persistent volume. |
+| `SMTP_HOST` | `smtp-relay.brevo.com` | Optional — enables email alerts in Monitor. |
+| `SMTP_PORT` | `587` | |
+| `SMTP_USER` | `you@example.com` | |
+| `SMTP_PASS` | `your-smtp-key` | |
+| `SMTP_FROM` | `Watchpost Alerts <noreply@yourdomain.com>` | |
