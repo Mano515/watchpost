@@ -394,22 +394,56 @@ export default function SiteAudit() {
   const [error, setError] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [progress, setProgress] = useState<{ pct: number; step: string } | null>(null);
   const { countdown, handleError, isRateLimited } = useRateLimit();
   const inputId    = useId();
   const errorId    = useId();
   const hasAutoRun = useRef(false);
+  const esRef      = useRef<EventSource | null>(null);
 
   async function performScan(target: string) {
-    setLoading(true); setError(null); setResult(null);
-    try {
-      const r = await api.auditSite(target);
-      setResult(r);
-      push({ type: 'site', input: target, grade: r.overallGrade });
-      setSearchParams({ domain: target }, { replace: true });
-    } catch (err) {
-      const msg = handleError(err);
-      if (msg) setError(msg);
-    } finally { setLoading(false); }
+    // Close any in-flight SSE connection
+    esRef.current?.close();
+    setLoading(true); setError(null); setResult(null); setProgress({ pct: 0, step: 'start' });
+
+    const BASE = (import.meta.env['VITE_API_URL'] ?? '') + '/api';
+
+    return new Promise<void>((resolve) => {
+      const es = new EventSource(`${BASE}/site-audit/stream?domain=${encodeURIComponent(target)}`);
+      esRef.current = es;
+
+      es.addEventListener('progress', (e: MessageEvent) => {
+        const { pct, step } = JSON.parse(e.data) as { pct: number; step: string };
+        setProgress({ pct, step });
+      });
+
+      es.addEventListener('result', (e: MessageEvent) => {
+        es.close();
+        const r = JSON.parse(e.data) as SiteAuditResult;
+        setResult(r);
+        setProgress(null);
+        setLoading(false);
+        push({ type: 'site', input: target, grade: r.overallGrade });
+        setSearchParams({ domain: target }, { replace: true });
+        resolve();
+      });
+
+      es.addEventListener('error', () => {
+        es.close();
+        // SSE connection error: fall back to regular POST
+        api.auditSite(target)
+          .then((r) => {
+            setResult(r);
+            push({ type: 'site', input: target, grade: r.overallGrade });
+            setSearchParams({ domain: target }, { replace: true });
+          })
+          .catch((err) => {
+            const msg = handleError(err);
+            if (msg) setError(msg);
+          })
+          .finally(() => { setProgress(null); setLoading(false); resolve(); });
+      });
+    });
   }
 
   useEffect(() => {
@@ -545,6 +579,24 @@ export default function SiteAudit() {
         </p>
       )}
 
+      {/* Scan progress bar */}
+      {loading && progress && (
+        <div style={{ marginBottom: '1.25rem' }} aria-live="polite" aria-label={t.scanning}>
+          <div style={{ height: '4px', background: 'var(--surface-2)', borderRadius: '2px', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', background: 'var(--accent)',
+              width: `${progress.pct}%`,
+              transition: 'width 0.6s ease',
+              borderRadius: '2px',
+            }} />
+          </div>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.4rem', display: 'flex', justifyContent: 'space-between' }}>
+            <span>{t.scanProgressSteps[progress.step] ?? t.scanning}</span>
+            <span>{t.scanProgressPct(progress.pct)}</span>
+          </p>
+        </div>
+      )}
+
       <div aria-live="polite" aria-atomic="true">
         {result && (
           <>
@@ -582,6 +634,26 @@ export default function SiteAudit() {
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                   {t.gradeLabel(result.overallGrade, result.overallScore)}
                 </div>
+              </div>
+
+              {/* Per-category mini score cards */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', justifyContent: 'center', marginTop: '0.25rem' }}>
+                {sections.filter((s) => s.score !== undefined && s.grade).map((s) => (
+                  <button
+                    key={s.key}
+                    onClick={() => { toggle(s.key); setTimeout(() => document.getElementById(`section-${s.key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.3rem',
+                      background: 'var(--surface)', border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)', padding: '0.2rem 0.55rem',
+                      fontSize: '0.7rem', cursor: 'pointer', color: 'var(--text-2)',
+                    }}
+                  >
+                    <span>{s.label.slice(0, 2)}</span>
+                    <span>{s.label.slice(2).trim().split(' ')[0]}</span>
+                    <span style={{ fontWeight: 700, color: GRADE_COLOR[s.grade!] }}>{s.grade}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -638,7 +710,7 @@ export default function SiteAudit() {
 
             {/* Expandable sections */}
             {sections.map(({ key, label, grade, score, error, content }) => (
-              <div key={key} className="site-section">
+              <div key={key} id={`section-${key}`} className="site-section">
                 <button
                   className="site-section__toggle"
                   aria-expanded={openSection === key}

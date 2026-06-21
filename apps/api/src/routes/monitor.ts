@@ -43,3 +43,8 @@ monitorRoutes.post('/:id/run', async (req: Request, res: Response) => {
   if (!result) return res.status(404).json({ error: 'Monitor not found' });
   res.json(result);
 });
+
+// Returns whether SMTP is configured server-side (so frontend can warn if not)
+monitorRoutes.get('/smtp-status', (_req: Request, res: Response) => {
+  res.json({ smtpConfigured: !!process.env['SMTP_HOST'] });
+});

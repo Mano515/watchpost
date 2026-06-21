@@ -47,11 +47,12 @@ function Sparkline({ history }: { history: MonitorHistoryPoint[] }) {
 
 export default function Monitor() {
   const { t } = useT();
-  const [monitors, setMonitors]   = useState<MonitorEntry[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState<string | null>(null);
-  const [added, setAdded]         = useState(false);
-  const [running, setRunning]     = useState<string | null>(null);
+  const [monitors, setMonitors]       = useState<MonitorEntry[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
+  const [added, setAdded]             = useState(false);
+  const [running, setRunning]         = useState<string | null>(null);
+  const [smtpConfigured, setSmtp]     = useState<boolean | null>(null);
 
   type FormState = { domain: string; threshold: number; frequency: 'daily' | 'weekly'; webhook: string; email: string };
   const FORM_DEFAULT: FormState = { domain: '', threshold: 80, frequency: 'daily', webhook: '', email: '' };
@@ -71,7 +72,13 @@ export default function Monitor() {
     }
   }, []);
 
-  useEffect(() => { fetchMonitors(); }, [fetchMonitors]);
+  useEffect(() => {
+    fetchMonitors();
+    fetch(`${API}/api/monitor/smtp-status`)
+      .then((r) => r.json())
+      .then((d: { smtpConfigured: boolean }) => setSmtp(d.smtpConfigured))
+      .catch(() => setSmtp(false));
+  }, [fetchMonitors]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -242,6 +249,15 @@ export default function Monitor() {
               onChange={(e) => setField('email', e.target.value)}
             />
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>{t.monitorEmailHint}</p>
+            {form.email && smtpConfigured === false && (
+              <p style={{
+                fontSize: '0.75rem', color: 'var(--warn)', marginTop: '0.4rem',
+                padding: '0.4rem 0.6rem', background: 'var(--warn-bg)',
+                borderRadius: 'var(--radius-sm)', border: '1px solid var(--warn-bg)',
+              }}>
+                ⚠ {t.smtpNotConfigured}
+              </p>
+            )}
           </div>
           {error && <p style={{ color: 'var(--err)', fontSize: '0.85rem' }}>{t.errorPrefix} {error}</p>}
           {added && <p style={{ color: 'var(--ok)', fontSize: '0.85rem' }}>✓ {t.monitorAdded}</p>}

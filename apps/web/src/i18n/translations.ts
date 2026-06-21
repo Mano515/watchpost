@@ -199,6 +199,13 @@ export interface Translations {
   severityLegendTitle: string;
   severityLegend: Record<'critical' | 'high' | 'medium' | 'low' | 'info', string>;
 
+  // Scan progress
+  scanProgressSteps: Record<string, string>;
+  scanProgressPct:   (pct: number) => string;
+
+  // Monitor SMTP
+  smtpNotConfigured: string;
+
   // Reputation & DNSBL
   reputationTitle:      string;
   reputationClean:      string;
@@ -412,6 +419,19 @@ const en: Translations = {
   vuln_self_signed:     '',
   vuln_subdomain_to:    '',
   vuln_change_password: '',
+
+  scanProgressSteps: {
+    start:      'Starting scan…',
+    headers:    'Headers checked',
+    vuln:       'Vulnerabilities scanned',
+    domain:     'SSL & DNS checked',
+    reputation: 'Reputation checked',
+    ct:         'Certificate transparency checked',
+    cached:     'Result from cache',
+    done:       'Scan complete',
+  },
+  scanProgressPct: (pct) => `${pct}%`,
+  smtpNotConfigured: 'Email alerts require SMTP configuration on the server (SMTP_HOST env var). Webhook alerts work without SMTP.',
 
   reputationTitle:   'Reputation & Blacklists',
   reputationClean:   'No blacklist listings found',
@@ -762,6 +782,19 @@ const fr: Translations = {
   vuln_subdomain_to:    '',
   vuln_change_password: '',
 
+  scanProgressSteps: {
+    start:      'Démarrage du scan…',
+    headers:    'En-têtes vérifiés',
+    vuln:       'Vulnérabilités scannées',
+    domain:     'SSL & DNS vérifiés',
+    reputation: 'Réputation vérifiée',
+    ct:         'Transparence des certificats vérifiée',
+    cached:     'Résultat depuis le cache',
+    done:       'Scan terminé',
+  },
+  scanProgressPct: (pct) => `${pct}%`,
+  smtpNotConfigured: 'Les alertes email nécessitent une configuration SMTP côté serveur (variable SMTP_HOST). Les alertes webhook fonctionnent sans SMTP.',
+
   reputationTitle:   'Réputation & Listes noires',
   reputationClean:   'Aucune liste noire détectée',
   reputationFlagged: 'Présent sur des listes noires',
@@ -1110,6 +1143,19 @@ const es: Translations = {
   vuln_self_signed:     '',
   vuln_subdomain_to:    '',
   vuln_change_password: '',
+
+  scanProgressSteps: {
+    start:      'Iniciando análisis…',
+    headers:    'Cabeceras verificadas',
+    vuln:       'Vulnerabilidades analizadas',
+    domain:     'SSL & DNS verificados',
+    reputation: 'Reputación verificada',
+    ct:         'Transparencia de certificados verificada',
+    cached:     'Resultado desde caché',
+    done:       'Análisis completo',
+  },
+  scanProgressPct: (pct) => `${pct}%`,
+  smtpNotConfigured: 'Las alertas por correo requieren configuración SMTP en el servidor (variable SMTP_HOST). Las alertas webhook funcionan sin SMTP.',
 
   reputationTitle:   'Reputación & Listas negras',
   reputationClean:   'Sin listas negras detectadas',
