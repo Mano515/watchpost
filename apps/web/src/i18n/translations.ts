@@ -199,6 +199,20 @@ export interface Translations {
   severityLegendTitle: string;
   severityLegend: Record<'critical' | 'high' | 'medium' | 'low' | 'info', string>;
 
+  // Reputation & DNSBL
+  reputationTitle:      string;
+  reputationClean:      string;
+  reputationFlagged:    string;
+  reputationDnsbl:      string;
+  reputationUrlhaus:    string;
+
+  // Certificate Transparency
+  ctTitle:         string;
+  ctCertCount:     (n: number) => string;
+  ctSubdomains:    string;
+  ctIssuers:       string;
+  ctNoData:        string;
+
   // Check keys → translated label + rec + explanation
   checks: Record<string, {
     label: string;
@@ -398,6 +412,18 @@ const en: Translations = {
   vuln_self_signed:     '',
   vuln_subdomain_to:    '',
   vuln_change_password: '',
+
+  reputationTitle:   'Reputation & Blacklists',
+  reputationClean:   'No blacklist listings found',
+  reputationFlagged: 'Listed on blacklists',
+  reputationDnsbl:   'DNSBL listings',
+  reputationUrlhaus: 'URLhaus (malware/phishing)',
+
+  ctTitle:      'Certificate Transparency',
+  ctCertCount:  (n) => `${n} certificate${n !== 1 ? 's' : ''} issued`,
+  ctSubdomains: 'Subdomains in CT logs',
+  ctIssuers:    'Certificate issuers',
+  ctNoData:     'No CT data available',
 
   exportPdf:  'Export PDF',
   exportJson: 'Export JSON',
@@ -736,6 +762,18 @@ const fr: Translations = {
   vuln_subdomain_to:    '',
   vuln_change_password: '',
 
+  reputationTitle:   'Réputation & Listes noires',
+  reputationClean:   'Aucune liste noire détectée',
+  reputationFlagged: 'Présent sur des listes noires',
+  reputationDnsbl:   'Listes DNSBL',
+  reputationUrlhaus: 'URLhaus (malware/phishing)',
+
+  ctTitle:      'Transparence des certificats',
+  ctCertCount:  (n) => `${n} certificat${n !== 1 ? 's' : ''} émis`,
+  ctSubdomains: 'Sous-domaines dans les logs CT',
+  ctIssuers:    'Autorités de certification',
+  ctNoData:     'Aucune donnée CT disponible',
+
   exportPdf:  'Exporter PDF',
   exportJson: 'Exporter JSON',
 
@@ -1072,6 +1110,18 @@ const es: Translations = {
   vuln_self_signed:     '',
   vuln_subdomain_to:    '',
   vuln_change_password: '',
+
+  reputationTitle:   'Reputación & Listas negras',
+  reputationClean:   'Sin listas negras detectadas',
+  reputationFlagged: 'Presente en listas negras',
+  reputationDnsbl:   'Listas DNSBL',
+  reputationUrlhaus: 'URLhaus (malware/phishing)',
+
+  ctTitle:      'Transparencia de certificados',
+  ctCertCount:  (n) => `${n} certificado${n !== 1 ? 's' : ''} emitido${n !== 1 ? 's' : ''}`,
+  ctSubdomains: 'Subdominios en logs CT',
+  ctIssuers:    'Autoridades de certificación',
+  ctNoData:     'Sin datos CT disponibles',
 
   exportPdf:  'Exportar PDF',
   exportJson: 'Exportar JSON',

@@ -7,7 +7,7 @@ import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
-import type { SiteAuditResult, VulnFinding, VulnSeverity, EmailSecurityResult } from '@watchpost/shared-types';
+import type { SiteAuditResult, VulnFinding, VulnSeverity, EmailSecurityResult, ReputationResult, CertTransparencyResult } from '@watchpost/shared-types';
 import { IconSearch } from '../components/Icons';
 
 function SeverityLegend({ t }: { t: ReturnType<typeof useT>['t'] }) {
@@ -278,6 +278,75 @@ function EmailSecurityDetail({ es, t }: { es: EmailSecurityResult; t: ReturnType
   );
 }
 
+function ReputationDetail({ rep, t }: { rep: ReputationResult; t: ReturnType<typeof useT>['t'] }) {
+  const clean = !rep.urlhausListed && rep.dnsblListings.length === 0;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '0.6rem',
+        padding: '0.6rem 0.9rem',
+        borderRadius: 'var(--radius-sm)',
+        background: clean ? 'var(--ok-bg, color-mix(in srgb, var(--ok) 10%, transparent))' : 'var(--err-bg)',
+        border: `1px solid ${clean ? 'var(--ok)' : 'var(--err-border)'}`,
+      }}>
+        <span style={{ fontSize: '1.1rem' }}>{clean ? '✅' : '⛔'}</span>
+        <span style={{ fontWeight: 600, fontSize: '0.875rem', color: clean ? 'var(--ok)' : 'var(--err)' }}>
+          {clean ? t.reputationClean : t.reputationFlagged}
+        </span>
+      </div>
+
+      <div className="info-grid">
+        <div className="info-cell">
+          <div className="info-cell__label">{t.reputationUrlhaus}</div>
+          <div className="info-cell__value" style={{ color: rep.urlhausListed ? 'var(--err)' : 'var(--ok)' }}>
+            {rep.urlhausListed ? `⛔ ${rep.urlhausUrl ?? 'listed'}` : '✓ clean'}
+          </div>
+        </div>
+        <div className="info-cell">
+          <div className="info-cell__label">{t.reputationDnsbl}</div>
+          <div className="info-cell__value" style={{ color: rep.dnsblListings.length > 0 ? 'var(--err)' : 'var(--ok)' }}>
+            {rep.dnsblListings.length > 0 ? rep.dnsblListings.join(', ') : '✓ clean'}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CertTransparencyDetail({ ct, t }: { ct: CertTransparencyResult; t: ReturnType<typeof useT>['t'] }) {
+  if (ct.certCount === 0) return <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{t.ctNoData}</p>;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', margin: 0 }}>
+        {t.ctCertCount(ct.certCount)}
+      </p>
+
+      {ct.issuers.length > 0 && (
+        <div>
+          <div className="dns-section__title">{t.ctIssuers}</div>
+          {ct.issuers.map((iss, i) => <div key={i} className="dns-record">{iss}</div>)}
+        </div>
+      )}
+
+      {ct.subdomains.length > 0 && (
+        <div>
+          <div className="dns-section__title">{t.ctSubdomains} ({ct.subdomains.length})</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.4rem' }}>
+            {ct.subdomains.map((sub, i) => (
+              <span key={i} style={{
+                fontSize: '0.72rem', fontFamily: 'var(--font-mono)',
+                background: 'var(--surface-2)', border: '1px solid var(--border)',
+                borderRadius: '3px', padding: '0.15rem 0.4rem',
+                color: 'var(--text-2)',
+              }}>{sub}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SiteAudit() {
@@ -386,6 +455,26 @@ export default function SiteAudit() {
       content: da
         ? <DnsDetail domainAudit={da} t={t} />
         : <p className="error-msg" style={{ marginBottom: 0 }}>{result.domainError}</p>,
+    },
+    {
+      key: 'reputation',
+      label: `🚦 ${t.reputationTitle}`,
+      score: result.reputation?.score,
+      grade: result.reputation?.grade,
+      error: result.reputationError,
+      content: result.reputation
+        ? <ReputationDetail rep={result.reputation} t={t} />
+        : <p className="error-msg" style={{ marginBottom: 0 }}>{result.reputationError}</p>,
+    },
+    {
+      key: 'ct',
+      label: `📜 ${t.ctTitle}`,
+      score: undefined,
+      grade: undefined,
+      error: result.certTransparencyError,
+      content: result.certTransparency
+        ? <CertTransparencyDetail ct={result.certTransparency} t={t} />
+        : <p className="error-msg" style={{ marginBottom: 0 }}>{result.certTransparencyError}</p>,
     },
   ] : [];
 

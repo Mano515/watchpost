@@ -2,6 +2,8 @@ import { SiteAuditResult, scoreToGrade } from '@watchpost/shared-types';
 import { scanHeaders } from './headerService';
 import { scanVulnerabilities } from './vulnerabilityService';
 import { auditDomain } from './domainService';
+import { checkReputation } from './reputationService';
+import { checkCertTransparency } from './certTransparencyService';
 import { TtlCache } from '../cache/ttlCache';
 
 const cache = new TtlCache<SiteAuditResult>(5 * 60_000);
@@ -12,18 +14,24 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
 
   const url = `https://${domain}`;
 
-  const [headersSettled, vulnSettled, domainSettled] = await Promise.allSettled([
+  const [headersSettled, vulnSettled, domainSettled, reputationSettled, ctSettled] = await Promise.allSettled([
     scanHeaders(url),
     scanVulnerabilities(url),
     auditDomain(domain),
+    checkReputation(domain),
+    checkCertTransparency(domain),
   ]);
 
-  const headers     = headersSettled.status === 'fulfilled'  ? headersSettled.value  : null;
-  const headersError= headersSettled.status === 'rejected'   ? (headersSettled.reason as Error).message : null;
-  const vuln        = vulnSettled.status === 'fulfilled'     ? vulnSettled.value     : null;
-  const vulnError   = vulnSettled.status === 'rejected'      ? (vulnSettled.reason as Error).message   : null;
-  const domainAudit = domainSettled.status === 'fulfilled'   ? domainSettled.value   : null;
-  const domainError = domainSettled.status === 'rejected'    ? (domainSettled.reason as Error).message : null;
+  const headers          = headersSettled.status === 'fulfilled'     ? headersSettled.value     : null;
+  const headersError     = headersSettled.status === 'rejected'      ? (headersSettled.reason as Error).message    : null;
+  const vuln             = vulnSettled.status === 'fulfilled'        ? vulnSettled.value        : null;
+  const vulnError        = vulnSettled.status === 'rejected'         ? (vulnSettled.reason as Error).message      : null;
+  const domainAudit      = domainSettled.status === 'fulfilled'      ? domainSettled.value      : null;
+  const domainError      = domainSettled.status === 'rejected'       ? (domainSettled.reason as Error).message    : null;
+  const reputation       = reputationSettled.status === 'fulfilled'  ? reputationSettled.value  : null;
+  const reputationError  = reputationSettled.status === 'rejected'   ? (reputationSettled.reason as Error).message : null;
+  const certTransparency = ctSettled.status === 'fulfilled'          ? ctSettled.value          : null;
+  const certTransparencyError = ctSettled.status === 'rejected'      ? (ctSettled.reason as Error).message        : null;
 
   // Weighted average: vuln 35 %, headers 30 %, SSL 20 %, email security 15 %
   const parts: Array<{ score: number; weight: number }> = [];
@@ -47,6 +55,10 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
     vulnError,
     domainAudit,
     domainError,
+    reputation,
+    reputationError,
+    certTransparency,
+    certTransparencyError,
     scannedAt: new Date().toISOString(),
   };
 

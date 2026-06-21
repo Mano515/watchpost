@@ -80,8 +80,25 @@ export interface VulnFinding {
   label: string;
   severity: VulnSeverity;
   passed: boolean;
-  detail?: string;     // what was found (e.g. "Apache/2.4.1")
+  detail?: string;
   recommendation?: string;
+  informational?: boolean; // shown in UI but excluded from score calculation
+}
+
+export interface ReputationResult {
+  domain: string;
+  urlhausListed: boolean;
+  urlhausUrl?: string;
+  dnsblListings: string[]; // names of DNSBL lists that flagged this domain/IP
+  score: number;           // 0-100
+  grade: string;
+}
+
+export interface CertTransparencyResult {
+  domain: string;
+  certCount: number;
+  subdomains: string[];
+  issuers: string[];
 }
 
 export interface VulnScanResult {
@@ -158,5 +175,9 @@ export interface SiteAuditResult {
   vulnError: string | null;
   domainAudit: DomainAuditResult | null;
   domainError: string | null;
+  reputation: ReputationResult | null;
+  reputationError: string | null;
+  certTransparency: CertTransparencyResult | null;
+  certTransparencyError: string | null;
   scannedAt: string;
 }
