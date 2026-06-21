@@ -7,6 +7,7 @@ import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { demoPassword } from '../demo/mockData';
 import type { PasswordCheckResult } from '@watchpost/shared-types';
@@ -154,6 +155,7 @@ export default function PasswordCheck() {
   const [password, setPassword] = useState(initialPwd);
   const [result, setResult]     = useState<PasswordCheckResult | null>(null);
   const [loading, setLoading]   = useState(false);
+  usePageTitle(result ? `${t.modules.password.title} — ${t.grades[result.grade]}` : t.modules.password.title);
   const [error, setError]       = useState<string | null>(null);
   const [isDemo, setIsDemo]     = useState(false);
   const { countdown, handleError, isRateLimited } = useRateLimit();

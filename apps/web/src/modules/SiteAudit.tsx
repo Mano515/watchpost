@@ -5,6 +5,7 @@ import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import type { SiteAuditResult, VulnFinding, VulnSeverity, EmailSecurityResult, ReputationResult, CertTransparencyResult } from '@watchpost/shared-types';
@@ -391,6 +392,7 @@ export default function SiteAudit() {
   const [domain, setDomain] = useState(initialDomain);
   const [result, setResult] = useState<SiteAuditResult | null>(null);
   const [loading, setLoading] = useState(false);
+  usePageTitle(result ? `${result.domain} — ${t.grades[result.overallGrade]} (${result.overallScore}/100)` : t.modules.site.title);
   const [error, setError] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

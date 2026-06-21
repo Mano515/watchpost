@@ -5,6 +5,7 @@ import ScoreBadge from '../components/ScoreBadge';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoBreach } from '../demo/mockData';
@@ -328,6 +329,7 @@ export default function BreachCheck() {
   const [email, setEmail]   = useState<string>(initialEmail);
   const [result, setResult] = useState<BreachCheckResult | null>(null);
   const [loading, setLoading] = useState(false);
+  usePageTitle(result ? `${result.email} — ${result.breaches.length} breach${result.breaches.length !== 1 ? 'es' : ''}` : t.modules.breach.title);
   const [error, setError]   = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const { countdown, handleError, isRateLimited } = useRateLimit();

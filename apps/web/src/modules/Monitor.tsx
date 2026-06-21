@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { usePageTitle } from '../hooks/usePageTitle';
 import ModuleLayout from '../components/ModuleLayout';
 import { useT } from '../i18n/LanguageContext';
 import type { MonitorEntry, MonitorHistoryPoint } from '@watchpost/shared-types';
@@ -47,6 +48,7 @@ function Sparkline({ history }: { history: MonitorHistoryPoint[] }) {
 
 export default function Monitor() {
   const { t } = useT();
+  usePageTitle(t.modules.monitor.title);
   const [monitors, setMonitors]       = useState<MonitorEntry[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -267,21 +269,34 @@ export default function Monitor() {
         </form>
       </section>
 
-      {/* CI/CD info */}
+      {/* CI/CD integration */}
       <section style={{ marginTop: '2rem', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>CI/CD integration</h3>
-        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.6rem' }}>
-          Add a security gate to any pipeline. Returns HTTP 200 if the score meets the threshold, 412 otherwise.
+        <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.5rem' }}>🔧 CI/CD integration</h3>
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.75rem', lineHeight: 1.5 }}>
+          Block deployments if security score drops. Returns <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', background: 'var(--surface-2)', padding: '0 0.25rem', borderRadius: '3px' }}>HTTP 200</code> if score ≥ threshold, <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', background: 'var(--surface-2)', padding: '0 0.25rem', borderRadius: '3px' }}>412</code> otherwise.
         </p>
-        <pre style={{ fontSize: '0.72rem', background: 'var(--surface-2)', padding: '0.75rem', borderRadius: '4px', overflowX: 'auto', margin: 0 }}>
-{`# GitHub Actions example
+        <pre style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', background: 'var(--surface-2)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', overflowX: 'auto', margin: 0, lineHeight: 1.6 }}>
+{`# GitHub Actions
 - name: Security gate
   run: |
     curl --fail-with-body \\
-      "${API}/api/ci?domain=example.com&threshold=80"
+      "${API}/api/ci?domain=${monitors[0]?.domain ?? 'example.com'}&threshold=${monitors[0]?.threshold ?? 80}"
 
-# Returns: { "pass": true, "score": 91, "grade": "A" }`}
+# GitLab CI
+security-gate:
+  script:
+    - curl --fail "${API}/api/ci?domain=${monitors[0]?.domain ?? 'example.com'}&threshold=${monitors[0]?.threshold ?? 80}"
+
+# Response: { "pass": true, "score": 91, "grade": "A", "domain": "..." }`}
         </pre>
+        {monitors[0] && (
+          <button
+            onClick={() => navigator.clipboard.writeText(`curl --fail-with-body "${API}/api/ci?domain=${monitors[0]!.domain}&threshold=${monitors[0]!.threshold}"`)}
+            style={{ marginTop: '0.5rem', fontSize: '0.72rem', background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '0.25rem 0.6rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+          >
+            📋 Copy curl command
+          </button>
+        )}
       </section>
     </ModuleLayout>
   );

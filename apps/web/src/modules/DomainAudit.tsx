@@ -6,6 +6,7 @@ import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
 import { useHistory } from '../hooks/useHistory';
+import { usePageTitle } from '../hooks/usePageTitle';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoDomain } from '../demo/mockData';
@@ -169,6 +170,7 @@ export default function DomainAudit() {
   const [result, setResult] = useState<DomainAuditResult | null>(null);
   const [bulkResults, setBulkResults] = useState<DomainAuditResult[] | null>(null);
   const [loading, setLoading] = useState(false);
+  usePageTitle(result ? `${result.domain} — ${t.modules.domain.title}` : t.modules.domain.title);
   const [error, setError] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const [isBulk, setIsBulk] = useState(false);

@@ -1,3 +1,6 @@
+import * as fs from 'fs';
+import * as path from 'path';
+import Database from 'better-sqlite3';
 import { SiteAuditResult, HeaderScanResult, VulnScanResult, DomainAuditResult, ReputationResult, CertTransparencyResult, scoreToGrade } from '@watchpost/shared-types';
 import { scanHeaders } from './headerService';
 import { scanVulnerabilities } from './vulnerabilityService';
@@ -7,6 +10,38 @@ import { checkCertTransparency } from './certTransparencyService';
 import { TtlCache } from '../cache/ttlCache';
 
 const cache = new TtlCache<SiteAuditResult>(5 * 60_000);
+
+// ── SQLite scan cache (survives restarts, max 1 row per domain) ───────────────
+
+const DATA_DIR = process.env['DATA_DIR'] ?? path.join(__dirname, '../../data');
+fs.mkdirSync(DATA_DIR, { recursive: true });
+
+const db = new Database(path.join(DATA_DIR, 'watchpost.db'));
+db.pragma('journal_mode = WAL');
+db.exec(`
+  CREATE TABLE IF NOT EXISTS scan_cache (
+    domain      TEXT PRIMARY KEY,
+    result_json TEXT NOT NULL,
+    scanned_at  TEXT NOT NULL
+  )
+`);
+
+const ONE_HOUR = 60 * 60 * 1000;
+
+function dbGet(domain: string): SiteAuditResult | null {
+  const row = db.prepare('SELECT result_json, scanned_at FROM scan_cache WHERE domain = ?').get(domain) as
+    { result_json: string; scanned_at: string } | undefined;
+  if (!row) return null;
+  const age = Date.now() - new Date(row.scanned_at).getTime();
+  if (age > 24 * ONE_HOUR) return null; // stale after 24 h
+  return JSON.parse(row.result_json) as SiteAuditResult;
+}
+
+function dbSet(domain: string, result: SiteAuditResult): void {
+  db.prepare(
+    'INSERT OR REPLACE INTO scan_cache (domain, result_json, scanned_at) VALUES (?, ?, ?)',
+  ).run(domain, JSON.stringify(result), result.scannedAt);
+}
 
 // ── Shared result builder ─────────────────────────────────────────────────────
 
@@ -66,6 +101,20 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
   const cached = cache.get(domain);
   if (cached) return cached;
 
+  // Check SQLite (survives server restarts)
+  const persisted = dbGet(domain);
+  if (persisted) {
+    const age = Date.now() - new Date(persisted.scannedAt).getTime();
+    if (age < ONE_HOUR) {
+      cache.set(domain, persisted); // warm up in-memory cache
+      return persisted;
+    }
+    // 1–24 h old: return stale while triggering background refresh
+    setImmediate(() => refreshInBackground(domain));
+    cache.set(domain, persisted);
+    return persisted;
+  }
+
   const url = `https://${domain}`;
 
   const settled = await Promise.allSettled([
@@ -78,10 +127,30 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
 
   const result = buildResult(domain, settled[0], settled[1], settled[2], settled[3], settled[4]);
   cache.set(domain, result);
+  dbSet(domain, result);
   return result;
 }
 
+async function refreshInBackground(domain: string): Promise<void> {
+  try {
+    const url = `https://${domain}`;
+    const settled = await Promise.allSettled([
+      scanHeaders(url), scanVulnerabilities(url), auditDomain(domain),
+      checkReputation(domain), checkCertTransparency(domain),
+    ]);
+    const result = buildResult(domain, settled[0], settled[1], settled[2], settled[3], settled[4]);
+    cache.set(domain, result);
+    dbSet(domain, result);
+  } catch {
+    // silent — background refresh; caller already has stale data
+  }
+}
+
 // ── Streaming (with progress callback) ───────────────────────────────────────
+
+export function getCachedAudit(domain: string): SiteAuditResult | null {
+  return cache.get(domain) ?? dbGet(domain);
+}
 
 export async function streamAuditSite(
   domain: string,
@@ -114,6 +183,7 @@ export async function streamAuditSite(
 
   const result = buildResult(domain, settled[0], settled[1], settled[2], settled[3], settled[4]);
   cache.set(domain, result);
+  dbSet(domain, result);
   onProgress('done', 100);
   return result;
 }

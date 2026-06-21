@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { auditSite, streamAuditSite } from '../services/siteAuditService';
+import { auditSite, streamAuditSite, getCachedAudit } from '../services/siteAuditService';
 
 export const siteAuditRoutes = Router();
 
@@ -17,6 +17,15 @@ siteAuditRoutes.post('/', async (req: Request, res: Response) => {
   } catch (err) {
     res.status(502).json({ error: (err as Error).message });
   }
+});
+
+// GET /api/site-audit/cached?domain=X — return last persisted result (no re-scan)
+siteAuditRoutes.get('/cached', (req: Request, res: Response) => {
+  const domain = (req.query['domain'] as string | undefined)?.replace(/^https?:\/\//, '').split('/')[0].trim();
+  if (!domain) return res.status(400).json({ error: 'domain is required' });
+  const result = getCachedAudit(domain);
+  if (!result) return res.status(404).json({ error: 'No cached result for this domain' });
+  res.json(result);
 });
 
 // GET /api/site-audit/stream?domain=X — SSE streaming scan with progress
