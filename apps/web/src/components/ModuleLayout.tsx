@@ -4,7 +4,7 @@ import { useT } from '../i18n/LanguageContext';
 
 interface Props {
   title: string;
-  icon: string;
+  icon: ReactNode;
   iconLabel: string;
   explainer: string;
   children: ReactNode;
@@ -42,7 +42,7 @@ export default function ModuleLayout({ title, icon, iconLabel, explainer, childr
       {/* Visible only when printing — shows logo, tool name, and date */}
       <div className="print-header" style={{ display: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #d0d7de', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-          <strong style={{ fontSize: '1rem' }}>🛡️ Watchpost — {title}</strong>
+          <strong style={{ fontSize: '1rem' }}>Watchpost — {title}</strong>
           <span style={{ fontSize: '0.8rem', color: '#656d76' }}>{new Date().toLocaleDateString()}</span>
         </div>
       </div>

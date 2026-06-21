@@ -10,6 +10,7 @@ import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoVuln } from '../demo/mockData';
 import type { VulnScanResult, VulnFinding, VulnSeverity } from '@watchpost/shared-types';
+import { IconSearch } from '../components/Icons';
 
 const SEVERITY_COLOR: Record<VulnSeverity, string> = {
   critical: 'var(--critical)',
@@ -144,7 +145,7 @@ export default function VulnScan() {
   return (
     <ModuleLayout
       title={t.modules.vuln.title}
-      icon="🔬"
+      icon={<IconSearch size={20} />}
       iconLabel="Security tool"
       explainer={t.modules.vuln.explainer}
     >

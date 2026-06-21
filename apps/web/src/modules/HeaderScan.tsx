@@ -11,6 +11,7 @@ import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoHeaders } from '../demo/mockData';
 import type { HeaderScanResult } from '@watchpost/shared-types';
+import { IconShield } from '../components/Icons';
 
 export default function HeaderScan() {
   const { t } = useT();
@@ -68,7 +69,7 @@ export default function HeaderScan() {
   }
 
   return (
-    <ModuleLayout title={t.modules.headers.title} icon="🛡️" iconLabel="Security tool" explainer={t.modules.headers.explainer}>
+    <ModuleLayout title={t.modules.headers.title} icon={<IconShield size={20} />} iconLabel="Security tool" explainer={t.modules.headers.explainer}>
       <form onSubmit={run} noValidate>
         <div className="field" style={{ marginBottom: '1.25rem' }}>
           <label className="field-label" htmlFor={inputId}>{t.targetUrl}</label>

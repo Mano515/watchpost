@@ -9,6 +9,7 @@ import { useHistory } from '../hooks/useHistory';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { demoPassword } from '../demo/mockData';
 import type { PasswordCheckResult } from '@watchpost/shared-types';
+import { IconLock } from '../components/Icons';
 
 // ── Password generator ────────────────────────────────────────────────────────
 
@@ -174,7 +175,7 @@ export default function PasswordCheck() {
   const strengthLabel = result?.strengthScore !== undefined ? t.pwdStrength[result.strengthScore as 0|1|2|3|4] : '';
 
   return (
-    <ModuleLayout title={t.modules.password.title} icon="🔑" iconLabel="Security tool" explainer={t.modules.password.explainer}>
+    <ModuleLayout title={t.modules.password.title} icon={<IconLock size={20} />} iconLabel="Security tool" explainer={t.modules.password.explainer}>
       <div className="notice">
         <span className="notice__icon" aria-hidden="true">🔒</span>
         <span>{t.passwordNotice}</span>

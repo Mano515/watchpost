@@ -170,7 +170,6 @@ export interface Translations {
 
   // UX helpers
   howItWorks: string; // collapsible explainer toggle
-  homeIntro:  string; // one-liner on home page
   hintUrl:    string; // hint under URL inputs
   hintEmail:  string; // hint under email input
   hintDomain: string; // hint under domain input
@@ -407,7 +406,6 @@ const en: Translations = {
   backHome:     'Back to home',
 
   howItWorks: 'How does this tool work?',
-  homeIntro:  'Audit any website, email address, or password for security issues — in seconds. Nothing you enter is stored or logged.',
   hintUrl:    'Enter the full URL, including https://',
   hintEmail:  'Your email is sent to HaveIBeenPwned to check breaches — it is never stored on our side.',
   hintDomain: 'Domain name only — no https:// needed (e.g. example.com)',
@@ -742,7 +740,6 @@ const fr: Translations = {
   backHome:     'Retour à l\'accueil',
 
   howItWorks: 'Comment fonctionne cet outil ?',
-  homeIntro:  'Analysez n\'importe quel site, adresse e-mail ou mot de passe en quelques secondes. Rien de ce que vous saisissez n\'est conservé.',
   hintUrl:    'Entrez l\'URL complète, avec https://',
   hintEmail:  'Votre e-mail est envoyé à HaveIBeenPwned pour vérification — il n\'est jamais stocké de notre côté.',
   hintDomain: 'Nom de domaine uniquement — sans https:// (ex. example.com)',
@@ -1077,7 +1074,6 @@ const es: Translations = {
   backHome:     'Volver al inicio',
 
   howItWorks: '¿Cómo funciona esta herramienta?',
-  homeIntro:  'Analiza cualquier sitio web, correo electrónico o contraseña en busca de problemas de seguridad — en segundos. No almacenamos nada de lo que introduces.',
   hintUrl:    'Introduce la URL completa, incluyendo https://',
   hintEmail:  'Tu correo se envía a HaveIBeenPwned para comprobar filtraciones — nunca lo almacenamos.',
   hintDomain: 'Solo el dominio — sin https:// (p.ej. example.com)',

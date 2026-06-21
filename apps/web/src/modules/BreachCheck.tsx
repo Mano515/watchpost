@@ -9,6 +9,7 @@ import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoBreach } from '../demo/mockData';
 import type { BreachCheckResult, BreachEntry, BreachRiskLevel } from '@watchpost/shared-types';
+import { IconMail } from '../components/Icons';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -362,7 +363,7 @@ export default function BreachCheck() {
   function loadDemo() { setResult(demoBreach); setIsDemo(true); setError(null); }
 
   return (
-    <ModuleLayout title={t.modules.breach.title} icon="📧" iconLabel="Security tool" explainer={t.modules.breach.explainer}>
+    <ModuleLayout title={t.modules.breach.title} icon={<IconMail size={20} />} iconLabel="Security tool" explainer={t.modules.breach.explainer}>
       {/* Mode toggle */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
         {(['single', 'multi'] as const).map((m) => (

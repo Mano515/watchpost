@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import ModuleLayout from '../components/ModuleLayout';
 import { useT } from '../i18n/LanguageContext';
 import type { MonitorEntry, MonitorHistoryPoint } from '@watchpost/shared-types';
+import { IconActivity } from '../components/Icons';
 
 const API = import.meta.env['VITE_API_URL'] ?? 'http://localhost:3001';
 
@@ -116,7 +117,7 @@ export default function Monitor() {
   return (
     <ModuleLayout
       title={t.modules.monitor.title}
-      icon="⏰"
+      icon={<IconActivity size={20} />}
       iconLabel="Monitoring"
       explainer={t.modules.monitor.explainer}
     >

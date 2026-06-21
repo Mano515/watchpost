@@ -9,6 +9,7 @@ import { useHistory } from '../hooks/useHistory';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import type { SiteAuditResult, VulnFinding, VulnSeverity, EmailSecurityResult } from '@watchpost/shared-types';
+import { IconSearch } from '../components/Icons';
 
 function SeverityLegend({ t }: { t: ReturnType<typeof useT>['t'] }) {
   const [open, setOpen] = useState(false);
@@ -392,7 +393,7 @@ export default function SiteAudit() {
   return (
     <ModuleLayout
       title={t.modules.site.title}
-      icon="🔬"
+      icon={<IconSearch size={20} />}
       iconLabel="Security tool"
       explainer={t.modules.site.explainer}
     >

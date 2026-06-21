@@ -3,6 +3,7 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import { ThemeToggle } from './components/ThemeToggle';
 import { useT } from './i18n/LanguageContext';
 import { useTheme } from './hooks/useTheme';
+import { IconShield } from './components/Icons';
 import Home from './modules/Home';
 import PasswordCheck from './modules/PasswordCheck';
 import BreachCheck from './modules/BreachCheck';
@@ -18,7 +19,7 @@ export default function App() {
       <a href="#main" className="skip-link">{t.skipToMain}</a>
       <header className="topbar">
         <Link to="/" className="topbar-brand">
-          <span className="topbar-brand__icon" aria-hidden="true">🛡️</span>
+          <IconShield size={16} className="topbar-brand__icon" />
           Watchpost
         </Link>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

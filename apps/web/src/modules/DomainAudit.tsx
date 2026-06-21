@@ -10,6 +10,7 @@ import { useRateLimit } from '../hooks/useRateLimit';
 import { downloadJson } from '../utils/downloadJson';
 import { demoDomain } from '../demo/mockData';
 import type { DomainAuditResult, EmailSecurityResult } from '@watchpost/shared-types';
+import { IconGlobe } from '../components/Icons';
 
 function RecordGroup({ label, records }: { label: string; records: string[] }) {
   if (!records.length) return null;
@@ -229,7 +230,7 @@ export default function DomainAudit() {
   }
 
   return (
-    <ModuleLayout title={t.modules.domain.title} icon="🔍" iconLabel="Security tool" explainer={t.modules.domain.explainer}>
+    <ModuleLayout title={t.modules.domain.title} icon={<IconGlobe size={20} />} iconLabel="Security tool" explainer={t.modules.domain.explainer}>
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <button
           type="button"
