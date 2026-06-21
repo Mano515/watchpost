@@ -251,6 +251,7 @@ export default function PasswordCheck() {
               <div className="info-cell">
                 <div className="info-cell__label">{t.crackTime}</div>
                 <div className="info-cell__value">{t.formatCrackTime(result.crackTimeSeconds)}</div>
+                <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{t.crackTimeNote}</div>
               </div>
               <div className="info-cell">
                 <div className="info-cell__label">{t.knownBreaches}</div>

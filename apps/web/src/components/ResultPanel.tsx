@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ScoreDetail, VulnSeverity } from '@watchpost/shared-types';
 import { useT } from '../i18n/LanguageContext';
+import { TermText } from './Term';
 
 const SEV_COLOR: Record<VulnSeverity, string> = {
   critical: 'var(--critical)',
@@ -128,7 +129,7 @@ export default function ResultPanel({ details }: Props) {
                 )}
                 <p style={{ margin: 0, flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>
                   <span className="sr-only">{d.passed ? t.passed : t.failed}: </span>
-                  {label}
+                  {label ? <TermText text={label} /> : null}
                 </p>
                 {canExpand && <Chevron open={isOpen} />}
               </div>
@@ -141,7 +142,7 @@ export default function ResultPanel({ details }: Props) {
                       <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ok)', marginBottom: '0.3rem' }}>
                         🔧 {t.howToFix}
                       </p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{rec}</p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}><TermText text={rec} /></p>
                     </div>
                   )}
                   {why && (
@@ -149,7 +150,7 @@ export default function ResultPanel({ details }: Props) {
                       <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--warn)', marginBottom: '0.3rem' }}>
                         ⚠️ {t.attackScenario}
                       </p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{why}</p>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}><TermText text={why} /></p>
                     </div>
                   )}
                 </div>

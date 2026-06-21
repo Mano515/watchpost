@@ -128,7 +128,10 @@ export async function checkPassword(password: string): Promise<PasswordCheckResu
   // zxcvbn gives a far more accurate crack-time estimate than pure entropy:
   // it accounts for dictionary words, patterns, dates, and common substitutions.
   const zx = zxcvbn(password);
-  const crackTimeSeconds = zx.crack_times_seconds.offline_fast_hashing_1e10_per_second as number;
+  // offline_slow_hashing = bcrypt/Argon2 at ~10 000 guesses/sec — the realistic
+  // scenario for a properly secured site. Using MD5-speed (1e10) overstates attacker
+  // advantage and makes strong passwords appear crackable in minutes.
+  const crackTimeSeconds = zx.crack_times_seconds.offline_slow_hashing_1e4_per_second as number;
   const strengthScore    = zx.score; // 0 (very weak) → 4 (very strong)
   const suggestions      = zx.feedback.suggestions;
   const warning          = zx.feedback.warning || undefined;

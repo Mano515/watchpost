@@ -89,6 +89,7 @@ export interface Translations {
   passwordNotice: string;
   entropy:        string;
   crackTime:      string;
+  crackTimeNote:  string;
   formatCrackTime:(seconds: number) => string;
   knownBreaches:  string;
   noneFound:      string;
@@ -281,6 +282,7 @@ const en: Translations = {
   passwordNotice: 'Your password is never stored or logged. The breach check uses k-anonymity — only 5 SHA-1 characters are sent to HaveIBeenPwned.',
   entropy:        'Entropy',
   crackTime:      'Crack time',
+  crackTimeNote:  'vs. bcrypt/Argon2',
   formatCrackTime: (s) => {
     if (s < 60)         return 'less than a minute';
     if (s < 3_600)      return `${Math.round(s / 60)} minutes`;
@@ -656,6 +658,7 @@ const fr: Translations = {
   passwordNotice: 'Votre mot de passe n\'est jamais stocké ni journalisé. La vérification de fuite utilise la k-anonymité — seuls 5 caractères du hash SHA-1 sont envoyés à HaveIBeenPwned.',
   entropy:   'Entropie',
   crackTime: 'Temps de cassage',
+  crackTimeNote:  'via bcrypt/Argon2',
   formatCrackTime: (s) => {
     if (s < 60)         return 'moins d\'une minute';
     if (s < 3_600)      return `${Math.round(s / 60)} minutes`;
@@ -992,6 +995,7 @@ const es: Translations = {
   passwordNotice: 'Tu contraseña nunca se almacena ni se registra. La verificación de filtración usa k-anonimato — solo 5 caracteres del hash SHA-1 se envían a HaveIBeenPwned.',
   entropy:   'Entropía',
   crackTime: 'Tiempo de descifrado',
+  crackTimeNote:  'vs. bcrypt/Argon2',
   formatCrackTime: (s) => {
     if (s < 60)         return 'menos de un minuto';
     if (s < 3_600)      return `${Math.round(s / 60)} minutos`;
