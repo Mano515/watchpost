@@ -212,7 +212,7 @@ const en: Translations = {
   skipToMain: 'Skip to main content',
 
   homeTitle: 'Watchpost',
-  homeSub:   'Centralised security audit suite — 4 tools, one interface.',
+  homeSub:   'Instant security audit — open source, no account needed.',
 
   modules: {
     site: {
@@ -548,7 +548,7 @@ const fr: Translations = {
   skipToMain: 'Aller au contenu principal',
 
   homeTitle: 'Watchpost',
-  homeSub:   'Suite d’audit de sécurité — 4 outils, une interface.',
+  homeSub:   'Audit de sécurité instantané — open source, sans compte.',
 
   modules: {
     site: {
@@ -884,7 +884,7 @@ const es: Translations = {
   skipToMain: 'Ir al contenido principal',
 
   homeTitle: 'Watchpost',
-  homeSub:   'Suite de auditoría de seguridad — 4 herramientas, una interfaz.',
+  homeSub:   'Auditoría de seguridad instantánea — open source, sin cuenta.',
 
   modules: {
     site: {
