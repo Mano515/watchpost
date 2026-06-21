@@ -407,8 +407,8 @@ const en: Translations = {
   notFoundDesc: 'The page you are looking for does not exist.',
   backHome:     'Back to home',
 
-  quickScanPlaceholder: 'example.com',
-  quickScanCta:         'Audit now',
+  quickScanPlaceholder: 'example.com, email or password',
+  quickScanCta:         'Scan',
   howItWorks: 'How does this tool work?',
   hintUrl:    'Enter the full URL, including https://',
   hintEmail:  'Your email is sent to HaveIBeenPwned to check breaches — it is never stored on our side.',
@@ -743,8 +743,8 @@ const fr: Translations = {
   notFoundDesc: 'La page que vous cherchez n\'existe pas.',
   backHome:     'Retour à l\'accueil',
 
-  quickScanPlaceholder: 'example.com',
-  quickScanCta:         'Auditer maintenant',
+  quickScanPlaceholder: 'example.com, email ou mot de passe',
+  quickScanCta:         'Analyser',
   howItWorks: 'Comment fonctionne cet outil ?',
   hintUrl:    'Entrez l\'URL complète, avec https://',
   hintEmail:  'Votre e-mail est envoyé à HaveIBeenPwned pour vérification — il n\'est jamais stocké de notre côté.',
@@ -1079,8 +1079,8 @@ const es: Translations = {
   notFoundDesc: 'La página que buscas no existe.',
   backHome:     'Volver al inicio',
 
-  quickScanPlaceholder: 'example.com',
-  quickScanCta:         'Auditar ahora',
+  quickScanPlaceholder: 'example.com, email o contraseña',
+  quickScanCta:         'Analizar',
   howItWorks: '¿Cómo funciona esta herramienta?',
   hintUrl:    'Introduce la URL completa, incluyendo https://',
   hintEmail:  'Tu correo se envía a HaveIBeenPwned para comprobar filtraciones — nunca lo almacenamos.',

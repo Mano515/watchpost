@@ -26,8 +26,20 @@ export default function Home() {
     e.preventDefault();
     const raw = domain.trim();
     if (!raw) return;
-    const cleaned = raw.replace(/^https?:\/\//i, '').split('/')[0].split('?')[0];
-    navigate(`/site?domain=${encodeURIComponent(cleaned)}`);
+
+    // Email
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) {
+      navigate(`/breach?email=${encodeURIComponent(raw)}`);
+      return;
+    }
+    // URL or domain (contains dot, no spaces, no @)
+    if (/^https?:\/\//i.test(raw) || /^[^\s@]+\.[^\s.@]{2,}$/.test(raw)) {
+      const cleaned = raw.replace(/^https?:\/\//i, '').split('/')[0].split('?')[0];
+      navigate(`/site?domain=${encodeURIComponent(cleaned)}`);
+      return;
+    }
+    // Password (everything else)
+    navigate('/password', { state: { pwd: raw } });
   }
 
   return (

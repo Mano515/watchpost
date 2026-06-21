@@ -1,4 +1,5 @@
-import { useState, useId } from 'react';
+import { useState, useId, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import ModuleLayout from '../components/ModuleLayout';
 import { downloadJson } from '../utils/downloadJson';
 import ScoreBadge from '../components/ScoreBadge';
@@ -148,26 +149,40 @@ function Generator({ onUse, t }: { onUse: (pwd: string) => void; t: ReturnType<t
 export default function PasswordCheck() {
   const { t } = useT();
   const { push } = useHistory();
-  const [password, setPassword] = useState('');
+  const location = useLocation();
+  const initialPwd = (location.state as { pwd?: string } | null)?.pwd ?? '';
+  const [password, setPassword] = useState(initialPwd);
   const [result, setResult]     = useState<PasswordCheckResult | null>(null);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [isDemo, setIsDemo]     = useState(false);
   const { countdown, handleError, isRateLimited } = useRateLimit();
-  const inputId = useId();
-  const errorId = useId();
+  const inputId    = useId();
+  const errorId    = useId();
+  const hasAutoRun = useRef(false);
 
-  async function run(e: React.FormEvent) {
-    e.preventDefault();
+  useEffect(() => {
+    if (initialPwd && !hasAutoRun.current) {
+      hasAutoRun.current = true;
+      runPassword(initialPwd);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function runPassword(pwd: string) {
     setLoading(true); setError(null); setResult(null); setIsDemo(false);
     try {
-      const r = await api.checkPassword(password);
+      const r = await api.checkPassword(pwd);
       setResult(r);
       push({ type: 'password', input: '••••••••', grade: r.grade });
     } catch (err) {
       const msg = handleError(err);
       if (msg) setError(msg);
     } finally { setLoading(false); }
+  }
+
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
+    runPassword(password);
   }
 
   function loadDemo() { setResult(demoPassword); setIsDemo(true); setError(null); }
