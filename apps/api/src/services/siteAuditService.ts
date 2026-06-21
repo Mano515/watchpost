@@ -33,12 +33,13 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
   const certTransparency = ctSettled.status === 'fulfilled'          ? ctSettled.value          : null;
   const certTransparencyError = ctSettled.status === 'rejected'      ? (ctSettled.reason as Error).message        : null;
 
-  // Weighted average: vuln 35 %, headers 30 %, SSL 20 %, email security 15 %
+  // Weighted average: vuln 30 %, headers 25 %, SSL 20 %, email security 15 %, reputation 10 %
   const parts: Array<{ score: number; weight: number }> = [];
-  if (headers)                           parts.push({ score: headers.score,                              weight: 0.30 });
-  if (vuln)                              parts.push({ score: vuln.score,                                 weight: 0.35 });
+  if (headers)                           parts.push({ score: headers.score,                              weight: 0.25 });
+  if (vuln)                              parts.push({ score: vuln.score,                                 weight: 0.30 });
   if (domainAudit?.ssl)                  parts.push({ score: domainAudit.ssl.score,                     weight: 0.20 });
   if (domainAudit?.dns?.emailSecurity)   parts.push({ score: domainAudit.dns.emailSecurity.score.score, weight: 0.15 });
+  if (reputation)                        parts.push({ score: reputation.score,                           weight: 0.10 });
 
   const totalWeight    = parts.reduce((s, p) => s + p.weight, 0);
   const overallScore   = totalWeight > 0

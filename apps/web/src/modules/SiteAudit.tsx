@@ -106,92 +106,125 @@ function SeverityPill({ sev, label }: { sev: VulnSeverity; label: string }) {
   );
 }
 
+function FindingRow({ f, t, openKey, setOpenKey }: {
+  f: VulnFinding;
+  t: ReturnType<typeof useT>['t'];
+  openKey: string | null;
+  setOpenKey: (k: string | null) => void;
+}) {
+  const check     = t.checks[f.key];
+  const label     = check?.label ?? f.label;
+  const rec       = check?.rec ?? f.recommendation;
+  const why       = check?.why;
+  const uid       = f.key;
+  const isOpen    = openKey === uid;
+  const canExpand = Boolean(!f.passed && (rec || why || f.detail));
+
+  return (
+    <li
+      style={{
+        display: 'flex', flexDirection: 'column',
+        borderRadius: 'var(--radius-sm)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderLeft: `3px solid ${f.informational ? 'var(--text-muted)' : f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity]}`,
+        padding: '0.55rem 0.8rem',
+        gap: 0,
+      }}
+    >
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: canExpand ? 'pointer' : 'default' }}
+        onClick={() => canExpand && setOpenKey(isOpen ? null : uid)}
+        role={canExpand ? 'button' : undefined}
+        aria-expanded={canExpand ? isOpen : undefined}
+      >
+        <span aria-hidden="true" style={{
+          flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '0.65rem', fontWeight: 700,
+          background: f.informational ? 'var(--surface-2)' : f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity],
+          color: f.informational ? 'var(--text-muted)' : f.passed ? '#0d1117' : '#fff',
+          border: f.informational ? '1px solid var(--border)' : 'none',
+        }}>
+          {f.informational ? 'ℹ' : f.passed ? '✓' : '✗'}
+        </span>
+        {f.informational || f.passed
+          ? <span style={{ width: '4rem', flexShrink: 0 }} aria-hidden="true" />
+          : <SeverityPill sev={f.severity} label={t.vulnSeverity[f.severity]} />
+        }
+        <p style={{ margin: 0, flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{label}</p>
+        {canExpand && <Chevron open={isOpen} />}
+      </div>
+
+      {isOpen && (
+        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {f.detail && (
+            <p style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', margin: 0 }}>{f.detail}</p>
+          )}
+          {rec && (
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ok)', marginBottom: '0.3rem' }}>
+                🔧 {t.howToFix}
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{rec}</p>
+            </div>
+          )}
+          {why && (
+            <div>
+              <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: SEVERITY_COLOR[f.severity], marginBottom: '0.3rem' }}>
+                ⚠️ {t.attackScenario}
+              </p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{why}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
 function VulnDetail({ findings, t }: { findings: VulnFinding[]; t: ReturnType<typeof useT>['t'] }) {
   const [openKey, setOpenKey] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
 
-  const sorted = [...findings].sort((a, b) => {
+  const scored = [...findings.filter((f) => !f.informational)].sort((a, b) => {
     if (a.passed !== b.passed) return a.passed ? 1 : -1;
     return SEVERITY_ORDER.indexOf(a.severity) - SEVERITY_ORDER.indexOf(b.severity);
   });
 
+  const info = findings.filter((f) => f.informational);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* ── Full findings list ── */}
       <ul className="result-list" role="list">
-        {sorted.map((f, i) => {
-          const check     = t.checks[f.key];
-          const label     = check?.label ?? f.label;
-          const rec       = check?.rec ?? f.recommendation;
-          const why       = check?.why;
-          const uid       = `${f.key}-${i}`;
-          const isOpen    = openKey === uid;
-          const canExpand = !f.passed && (rec || why || f.detail);
-
-          return (
-            <li
-              key={uid}
-              style={{
-                display: 'flex', flexDirection: 'column',
-                borderRadius: 'var(--radius-sm)',
-                background: 'var(--surface)',
-                border: '1px solid var(--border)',
-                borderLeft: `3px solid ${f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity]}`,
-                padding: '0.55rem 0.8rem',
-                gap: 0,
-              }}
-            >
-              {/* Row */}
-              <div
-                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: canExpand ? 'pointer' : 'default' }}
-                onClick={() => canExpand && setOpenKey(isOpen ? null : uid)}
-                role={canExpand ? 'button' : undefined}
-                aria-expanded={canExpand ? isOpen : undefined}
-              >
-                <span aria-hidden="true" style={{
-                  flexShrink: 0, width: 18, height: 18, borderRadius: '50%',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.65rem', fontWeight: 700,
-                  background: f.passed ? 'var(--ok)' : SEVERITY_COLOR[f.severity],
-                  color: f.passed ? '#0d1117' : '#fff',
-                }}>
-                  {f.passed ? '✓' : '✗'}
-                </span>
-                {f.passed
-                  ? <span style={{ width: '4rem', flexShrink: 0 }} aria-hidden="true" />
-                  : <SeverityPill sev={f.severity} label={t.vulnSeverity[f.severity]} />
-                }
-                <p style={{ margin: 0, flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{label}</p>
-                {canExpand && <Chevron open={isOpen} />}
-              </div>
-
-              {/* Expanded detail */}
-              {isOpen && (
-                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {f.detail && (
-                    <p style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', margin: 0 }}>{f.detail}</p>
-                  )}
-                  {rec && (
-                    <div>
-                      <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--ok)', marginBottom: '0.3rem' }}>
-                        🔧 {t.howToFix}
-                      </p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{rec}</p>
-                    </div>
-                  )}
-                  {why && (
-                    <div>
-                      <p style={{ fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: SEVERITY_COLOR[f.severity], marginBottom: '0.3rem' }}>
-                        ⚠️ {t.attackScenario}
-                      </p>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', margin: 0, lineHeight: 1.55 }}>{why}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </li>
-          );
-        })}
+        {scored.map((f) => (
+          <FindingRow key={f.key} f={f} t={t} openKey={openKey} setOpenKey={setOpenKey} />
+        ))}
       </ul>
+
+      {info.length > 0 && (
+        <div>
+          <button
+            onClick={() => setInfoOpen((o) => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.4rem',
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', fontSize: '0.78rem', padding: '0.25rem 0',
+            }}
+            aria-expanded={infoOpen}
+          >
+            <Chevron open={infoOpen} />
+            ℹ️ {t.vulnInfoNote} ({info.length})
+          </button>
+          {infoOpen && (
+            <ul className="result-list" role="list" style={{ marginTop: '0.5rem' }}>
+              {info.map((f) => (
+                <FindingRow key={f.key} f={f} t={t} openKey={openKey} setOpenKey={setOpenKey} />
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -573,8 +606,9 @@ export default function SiteAudit() {
                   </p>
                   <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     {criticals.map((f, i) => {
-                      const label = ('key' in f && f.key) ? (t.checks[f.key]?.label ?? f.label) : f.label;
-                      const detail = 'detail' in f ? f.detail : undefined;
+                      const key    = ('key' in f ? f.key : undefined) as string | undefined;
+                      const label  = (key ? (t.checks[key]?.label ?? f.label) : f.label) as string;
+                      const detail = ('detail' in f ? (f as VulnFinding).detail : undefined) as string | undefined;
                       return (
                         <li key={i} style={{ fontSize: '0.82rem', color: 'var(--text-2)', display: 'flex', alignItems: 'baseline', gap: '0.4rem', flexWrap: 'wrap' }}>
                           <span style={{ color: 'var(--critical)', fontSize: '0.7rem', flexShrink: 0 }}>▸</span>
