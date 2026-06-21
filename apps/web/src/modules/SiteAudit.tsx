@@ -1,7 +1,6 @@
 import { useState, useId, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ModuleLayout from '../components/ModuleLayout';
-import ScoreBadge from '../components/ScoreBadge';
 import ResultPanel from '../components/ResultPanel';
 import { api } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
@@ -429,12 +428,39 @@ export default function SiteAudit() {
           <>
             <hr className="divider" />
 
-            {/* Overall score */}
-            <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {/* Overall score — centré, prominent */}
+            <div
+              role="status"
+              aria-label={t.securityGrade(result.overallGrade, t.grades[result.overallGrade], result.overallScore)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem',
+                padding: '1.5rem 1rem',
+                background: 'var(--surface-2)',
+                borderRadius: 'var(--radius)',
+                marginBottom: '1.25rem',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0 }}>
                 {t.siteOverallScore}
               </p>
-              <ScoreBadge score={result.overallScore} grade={result.overallGrade} />
+              <div aria-hidden="true" style={{
+                width: 80, height: 80, borderRadius: '50%',
+                border: `3px solid ${GRADE_COLOR[result.overallGrade]}`,
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                color: GRADE_COLOR[result.overallGrade],
+              }}>
+                <span style={{ fontSize: '2rem', fontWeight: 800, lineHeight: 1 }}>{result.overallGrade}</span>
+                <span style={{ fontSize: '0.58rem', fontWeight: 500, opacity: 0.85, marginTop: '0.1rem' }}>{result.overallScore}/100</span>
+              </div>
+              <div aria-hidden="true">
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: GRADE_COLOR[result.overallGrade] }}>
+                  {t.grades[result.overallGrade]}
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                  {t.gradeLabel(result.overallGrade, result.overallScore)}
+                </div>
+              </div>
             </div>
 
             {/* Critical findings banner — all sections */}
