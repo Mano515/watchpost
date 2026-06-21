@@ -652,19 +652,24 @@ details[open] .explainer-summary__chevron {
 }
 
 /* ── Home hero ── */
+.home-page {
+  position: relative;
+}
+.home-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 45% at 50% 0%,
+    color-mix(in srgb, var(--accent) 9%, transparent), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+.home-page > * { position: relative; z-index: 1; }
+
 .home-hero {
   text-align: center;
   padding: 3.5rem 1rem 3rem;
-  position: relative;
   margin-bottom: 1.5rem;
-}
-.home-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 0%,
-    color-mix(in srgb, var(--accent) 8%, transparent), transparent);
-  pointer-events: none;
 }
 .home-hero__badge {
   display: inline-flex;
