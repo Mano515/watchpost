@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { auditSite } from '../services/siteAuditService';
+import { cleanDomain } from '../utils/cleanDomain';
 
 export const ciRoutes = Router();
 
@@ -9,7 +10,7 @@ export const ciRoutes = Router();
  * Designed for use in GitHub Actions / CI pipelines.
  */
 ciRoutes.get('/', async (req: Request, res: Response) => {
-  const domain    = (req.query['domain'] as string | undefined)?.replace(/^https?:\/\//, '').split('/')[0].trim();
+  const domain    = (req.query['domain'] as string | undefined) ? cleanDomain(req.query['domain'] as string) : undefined;
   const threshold = parseInt((req.query['threshold'] as string | undefined) ?? '80', 10);
 
   if (!domain) return res.status(400).json({ error: 'domain query parameter is required' });

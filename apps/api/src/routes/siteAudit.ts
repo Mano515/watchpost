@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { auditSite, streamAuditSite, getCachedAudit } from '../services/siteAuditService';
+import { cleanDomain } from '../utils/cleanDomain';
 
 export const siteAuditRoutes = Router();
 
@@ -9,7 +10,7 @@ siteAuditRoutes.post('/', async (req: Request, res: Response) => {
   if (!domain || typeof domain !== 'string') {
     return res.status(400).json({ error: 'domain is required' });
   }
-  const clean = domain.replace(/^https?:\/\//, '').split('/')[0].trim();
+  const clean = cleanDomain(domain);
   if (!clean) return res.status(400).json({ error: 'Invalid domain' });
 
   try {
@@ -21,7 +22,8 @@ siteAuditRoutes.post('/', async (req: Request, res: Response) => {
 
 // GET /api/site-audit/cached?domain=X — return last persisted result (no re-scan)
 siteAuditRoutes.get('/cached', (req: Request, res: Response) => {
-  const domain = (req.query['domain'] as string | undefined)?.replace(/^https?:\/\//, '').split('/')[0].trim();
+  const raw = req.query['domain'] as string | undefined;
+  const domain = raw ? cleanDomain(raw) : undefined;
   if (!domain) return res.status(400).json({ error: 'domain is required' });
   const result = getCachedAudit(domain);
   if (!result) return res.status(404).json({ error: 'No cached result for this domain' });
@@ -34,7 +36,7 @@ siteAuditRoutes.get('/stream', async (req: Request, res: Response) => {
   if (!domain || typeof domain !== 'string') {
     return res.status(400).json({ error: 'domain is required' });
   }
-  const clean = domain.replace(/^https?:\/\//, '').split('/')[0].trim();
+  const clean = cleanDomain(domain);
   if (!clean) return res.status(400).json({ error: 'Invalid domain' });
 
   res.setHeader('Content-Type', 'text/event-stream');

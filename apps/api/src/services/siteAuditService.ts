@@ -28,19 +28,19 @@ db.exec(`
 
 const ONE_HOUR = 60 * 60 * 1000;
 
-function dbGet(domain: string): SiteAuditResult | null {
-  const row = db.prepare('SELECT result_json, scanned_at FROM scan_cache WHERE domain = ?').get(domain) as
-    { result_json: string; scanned_at: string } | undefined;
+const stmtGet = db.prepare('SELECT result_json, scanned_at FROM scan_cache WHERE domain = ?');
+const stmtSet = db.prepare('INSERT OR REPLACE INTO scan_cache (domain, result_json, scanned_at) VALUES (?, ?, ?)');
+
+function dbGet(domain: string): { result: SiteAuditResult; age: number } | null {
+  const row = stmtGet.get(domain) as { result_json: string; scanned_at: string } | undefined;
   if (!row) return null;
   const age = Date.now() - new Date(row.scanned_at).getTime();
-  if (age > 24 * ONE_HOUR) return null; // stale after 24 h
-  return JSON.parse(row.result_json) as SiteAuditResult;
+  if (age > 24 * ONE_HOUR) return null;
+  return { result: JSON.parse(row.result_json) as SiteAuditResult, age };
 }
 
 function dbSet(domain: string, result: SiteAuditResult): void {
-  db.prepare(
-    'INSERT OR REPLACE INTO scan_cache (domain, result_json, scanned_at) VALUES (?, ?, ?)',
-  ).run(domain, JSON.stringify(result), result.scannedAt);
+  stmtSet.run(domain, JSON.stringify(result), result.scannedAt);
 }
 
 // ── Shared result builder ─────────────────────────────────────────────────────
@@ -104,15 +104,14 @@ export async function auditSite(domain: string): Promise<SiteAuditResult> {
   // Check SQLite (survives server restarts)
   const persisted = dbGet(domain);
   if (persisted) {
-    const age = Date.now() - new Date(persisted.scannedAt).getTime();
-    if (age < ONE_HOUR) {
-      cache.set(domain, persisted); // warm up in-memory cache
-      return persisted;
+    if (persisted.age < ONE_HOUR) {
+      cache.set(domain, persisted.result);
+      return persisted.result;
     }
     // 1–24 h old: return stale while triggering background refresh
     setImmediate(() => refreshInBackground(domain));
-    cache.set(domain, persisted);
-    return persisted;
+    cache.set(domain, persisted.result);
+    return persisted.result;
   }
 
   const url = `https://${domain}`;
@@ -149,7 +148,7 @@ async function refreshInBackground(domain: string): Promise<void> {
 // ── Streaming (with progress callback) ───────────────────────────────────────
 
 export function getCachedAudit(domain: string): SiteAuditResult | null {
-  return cache.get(domain) ?? dbGet(domain);
+  return cache.get(domain) ?? dbGet(domain)?.result ?? null;
 }
 
 export async function streamAuditSite(

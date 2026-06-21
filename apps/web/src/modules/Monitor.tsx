@@ -123,6 +123,8 @@ export default function Monitor() {
     }
   }
 
+  const ciUrl = `${API}/api/ci?domain=${monitors[0]?.domain ?? 'example.com'}&threshold=${monitors[0]?.threshold ?? 80}`;
+
   return (
     <ModuleLayout
       title={t.modules.monitor.title}
@@ -280,12 +282,12 @@ export default function Monitor() {
 - name: Security gate
   run: |
     curl --fail-with-body \\
-      "${API}/api/ci?domain=${monitors[0]?.domain ?? 'example.com'}&threshold=${monitors[0]?.threshold ?? 80}"
+      "${ciUrl}"
 
 # GitLab CI
 security-gate:
   script:
-    - curl --fail "${API}/api/ci?domain=${monitors[0]?.domain ?? 'example.com'}&threshold=${monitors[0]?.threshold ?? 80}"
+    - curl --fail "${ciUrl}"
 
 # Response: { "pass": true, "score": 91, "grade": "A", "domain": "..." }`}
         </pre>

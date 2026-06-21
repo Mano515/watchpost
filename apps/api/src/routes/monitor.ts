@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { listMonitors, addMonitor, removeMonitor, runMonitor } from '../services/monitorService';
+import { cleanDomain } from '../utils/cleanDomain';
 
 export const monitorRoutes = Router();
 
@@ -14,7 +15,7 @@ monitorRoutes.post('/', async (req: Request, res: Response) => {
 
   if (!domain || typeof domain !== 'string') return res.status(400).json({ error: 'domain is required' });
 
-  const clean = domain.replace(/^https?:\/\//, '').split('/')[0].trim();
+  const clean = cleanDomain(domain);
   if (!clean) return res.status(400).json({ error: 'Invalid domain' });
 
   const th = Number(threshold ?? 80);
