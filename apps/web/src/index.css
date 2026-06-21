@@ -1023,6 +1023,71 @@ details[open] .explainer-summary__chevron {
 .site-section__body { padding: 1rem; }
 .explainer-summary__chevron--open { transform: rotate(90deg); }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — MOBILE FIRST
+   Breakpoints: 640px (tablets/large phones) · 480px (phones) · 360px (small)
+══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  /* Layout */
+  .page        { padding: 1.5rem 1rem 2.5rem; }
+  .module-page { padding: 1.25rem 1rem 3rem; }
+  .card        { padding: 1rem; }
+
+  /* Hero */
+  .home-hero          { padding: 1.5rem 0.5rem 1.5rem; margin-bottom: 1rem; }
+  .home-hero__title   { font-size: 2rem; }
+  .home-hero__badge   { margin-bottom: 0.85rem; }
+
+  /* Module heading */
+  .module-heading { font-size: 1.3rem; margin-bottom: 1.1rem; }
+
+  /* Score badge — reduce breathing room */
+  .score-badge  { padding: 1rem 1.1rem; gap: 0.9rem; }
+  .score-circle { width: 58px; height: 58px; }
+  .score-circle__grade { font-size: 1.5rem; }
+
+  /* Info grid cells — let them stack to 2 cols on narrow screens */
+  .info-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+
+  /* Site audit sub-scores — reduce padding so 3 cols still fit */
+  .site-sub-score       { padding: 0.5rem 0.4rem; }
+  .site-sub-score__grade{ font-size: 1.25rem; }
+
+  /* Back link — less bottom margin */
+  .back-link { margin-bottom: 1.25rem; }
+
+  /* Explainer */
+  .explainer-details { font-size: 0.875rem; }
+}
+
+@media (max-width: 480px) {
+  /* Hero title — avoid overflow on ~375px */
+  .home-hero__title { font-size: 1.7rem; letter-spacing: -0.02em; }
+
+  /* Glossary tooltip: right-align to avoid right-edge overflow on mobile */
+  .glossary-term__tooltip {
+    left: auto;
+    right: -0.5rem;
+    transform: none;
+    max-width: min(220px, 78vw);
+  }
+
+  /* Score badge — stack vertically on very narrow screens */
+  .score-badge { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding: 0.9rem 1rem; }
+
+  /* Breach item header — allow wrapping */
+  .breach-item__header { flex-wrap: wrap; }
+  .breach-item__date   { font-size: 0.7rem; }
+
+}
+
+@media (max-width: 360px) {
+  .home-hero__title  { font-size: 1.5rem; }
+  .home-hero__sub    { font-size: 0.9rem; }
+  .module-grid       { grid-template-columns: 1fr; }
+}
+
 /* ── Print / PDF export ── */
 @media print {
   /* Hide all interactive UI */
