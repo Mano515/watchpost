@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import zxcvbn from 'zxcvbn';
-import { PasswordCheckResult, ScoreDetail } from '@watchpost/shared-types';
+import { PasswordCheckResult, ScoreDetail, scoreToGrade } from '@watchpost/shared-types';
 import { buildScore } from '../scoring';
 import { httpGet } from '../http/client';
 
@@ -174,5 +174,20 @@ export async function checkPassword(password: string): Promise<PasswordCheckResu
     },
   ];
 
-  return { entropy, crackTimeSeconds, pwnedCount, strengthScore, suggestions, warning, ...buildScore(details) };
+  const checklistResult = buildScore(details);
+
+  // The checklist tests simple rules (length, charset…) but misses context:
+  // a passphrase without uppercase still takes centuries to crack, while
+  // "P@$$w0rd1" ticks every box yet falls in seconds.
+  // Blending 40 % checklist + 60 % zxcvbn gives a score that matches reality.
+  const zxScore     = (strengthScore / 4) * 100;
+  const finalScore  = Math.round(0.4 * checklistResult.score + 0.6 * zxScore);
+  const finalGrade  = pwnedCount > 0 ? 'F' : scoreToGrade(finalScore);
+
+  return {
+    entropy, crackTimeSeconds, pwnedCount, strengthScore, suggestions, warning,
+    ...checklistResult,
+    score: finalScore,
+    grade: finalGrade,
+  };
 }
